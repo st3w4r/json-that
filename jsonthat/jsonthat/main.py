@@ -96,8 +96,7 @@ def example():
   echo 'my name is jay' | jsonthat
   {
     "name": "Jay"
-  }
-          """)
+  }""")
     print()
 
 
