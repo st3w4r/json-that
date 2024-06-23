@@ -1,7 +1,7 @@
 # contributing
 
 ```
-poetry build
 poetry version patch
+poetry build
 poetry publish
 ```

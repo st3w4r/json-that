@@ -90,10 +90,10 @@ def example():
     print("Examples:")
     print("  echo 'raw text' | jsonthat")
     print("  echo 'raw text' | jt")
-    print("  echo 'raw text' | jsonthat -s schema.json")
+    print("  echo 'raw text' | jt -s schema.json")
 
     print("""
-  echo 'my name is jay' | jsonthat
+  echo 'my name is jay' | jt
   {
     "name": "Jay"
   }""")
