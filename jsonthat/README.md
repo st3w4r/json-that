@@ -11,7 +11,7 @@ pip install jsonthat
 ## usage
 
 ```bash
-echo 'my name is jay' | jsonthat
+echo 'my name is jay' | jt
 {
   "name": "Jay"
 }
