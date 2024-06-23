@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "jsonthat"
+version = "0.1.0"
+description = ""
+authors = ["Yanael Barbier <st3w4r@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+openai = "^1.35.3"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+jsonthat = "jsonthat.main:main"
+jt = "jsonthat.main:main"
