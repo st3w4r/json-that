@@ -5,7 +5,7 @@ export PYPI_TOKEN=<pypi-token>
 
 poetry config pypi-token.pypi $PYPI_TOKEN
 
-poetry version patch
-poetry build
-poetry publish
+make patch
+make build
+make publish
 ```

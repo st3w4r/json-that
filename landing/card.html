@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell Command Card</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background-color: #1a1a2e;
+            color: #f5f5f5;
+            width: 600px;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f5c518;
+            margin-bottom: 20px;
+        }
+
+        .code-block {
+            background-color: #272822;
+            color: #f8f8f2;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: block;
+            width: 100%;
+        }
+
+        .description {
+            font-size: 16px;
+            color: #f5c518;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .branding {
+            font-size: 14px;
+            color: #f5c518;
+            text-align: right;
+        }
+
+        .branding a {
+            color: #f5c518;
+            text-decoration: none;
+        }
+
+        .highlight {
+            color: #f5c518;
+            font-weight: bold;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .download-button,
+        .share-button {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .download-button {
+            background-color: #f5c518;
+            color: #1a1a2e;
+        }
+
+        .download-button:hover {
+            background-color: #e5b518;
+        }
+
+        .share-button {
+            background-color: #1da1f2;
+            color: #fff;
+        }
+
+        .share-button:hover {
+            background-color: #0d95e8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card" id="card-content">
+        <div class="header">Shell command from text to JSON</div>
+        <div class="code-block">
+            <code>echo "my name is Jay" | jt</code>
+        </div>
+        <div class="description">
+            Transforms raw text to JSON. For example, the above command produces:
+            <pre class="code-block">
+{
+  "name": "Jay"
+}</pre>
+        </div>
+        <div class="description">
+            To install the tool, use:
+            <pre class="code-block">pip install jsonthat</pre>
+        </div>
+        <div class="branding">
+            <a href="https://x.com/st3w4r/">@st3w4r</a>
+            <a href="https://x.com/_buildspace/">@_buildspace</a>
+            <a href="https://x.com/_nightsweekends/">@_nightsweekends</a>
+            #devtool #json #LLM #ai
+        </div>
+        <div class="button-container">
+            <button class="download-button" onclick="downloadCard()">Download Card</button>
+            <button class="share-button" onclick="shareOnTwitter()">Share on X/Twitter</button>
+        </div>
+    </div>
+
+    <script>
+        function downloadCard() {
+            const cardContent = document.getElementById('card-content').innerText;
+            const lines = cardContent.split('\n');
+            const filteredLines = lines.filter(line => !line.includes('Download Card') && !line.includes('Share on X/Twitter'));
+            const formattedContent = filteredLines.join('\n\n') + '\n\nhttps://x.com/st3w4r/';
+
+            const element = document.createElement('a');
+            const file = new Blob([formattedContent], { type: 'text/plain' });
+            element.href = URL.createObjectURL(file);
+            element.download = 'shell_command_card.txt';
+            document.body.appendChild(element); // Required for this to work in FireFox
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function shareOnTwitter() {
+            const title = document.querySelector('.header').innerText;
+            const command = document.querySelector('.code-block code').innerText;
+            const output = document.querySelectorAll('.description .code-block')[0].innerText;
+            const installCommand = document.querySelectorAll('.description .code-block')[1].innerText;
+            const twitterHandle = document.querySelector('.branding').innerText;
+
+            const textToShare = encodeURIComponent(`${title}\n\nCommand:\n${command}\n\nOutput:\n${output}\n\nInstall:\n${installCommand}\n\n${twitterHandle}`);
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${textToShare}`;
+            window.open(twitterUrl, '_blank');
+        }
+    </script>
+</body>
+
+</html>

@@ -1,6 +1,10 @@
 # json that
 
-transform any raw text to json
+transform any raw text to json, using LLM.
+
+Provider:
+- OpenAI
+- Claude AI
 
 ## installation
 
@@ -9,7 +13,7 @@ pip install jsonthat
 ```
 
 ```bash
-export OPENAI_API_KEY=<your_openai_api_key>
+jt --setup
 ```
 
 ## usage
