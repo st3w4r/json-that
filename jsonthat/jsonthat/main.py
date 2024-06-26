@@ -223,7 +223,9 @@ def main():
     parser = CustomHelpParser(description="Text to JSON CLI")
     parser.add_argument("--setup", action="store_true", help="Run the setup command")
     parser.add_argument("--schema", type=str, help="Path to the schema file")
-    parser.add_argument("--version", action="store_true", help="Show the version and exit")
+    parser.add_argument(
+        "--version", action="store_true", help="Show the version and exit"
+    )
     args = parser.parse_args()
 
     if args.version:
