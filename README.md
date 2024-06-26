@@ -6,7 +6,7 @@ pip install jsonthat
 ```
 
 ```bash
-export OPENAI_API_KEY=<your_openai_api_key>
+jt --setup
 ```
 
 ```bash
@@ -24,3 +24,8 @@ echo 'my name is jay' | jt
 - [x] release the package
 - [ ] stream the output
 - [ ] handle long content
+- [x] mutli provier: openai, claude
+- [x] version flag
+- [x] landing page
+- [ ] documentation
+- [ ] local LLM
