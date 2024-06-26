@@ -5,7 +5,6 @@ import requests
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 import yaml
-from pathlib import Path
 import argparse
 
 class LLMProvider(ABC):
@@ -87,7 +86,7 @@ class Config:
 
     def get_config_file_path(self):
         config_dir = os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
-        return os.path.join(config_dir, 'text_to_json_cli', 'config.yaml')
+        return os.path.join(config_dir, 'jsonthat', 'config.yaml')
 
     def load_config(self):
         if os.path.exists(self.config_file):
