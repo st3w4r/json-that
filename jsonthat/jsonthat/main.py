@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 import yaml
 import argparse
+from .version import __version__
 
 
 class LLMProvider(ABC):
@@ -222,7 +223,12 @@ def main():
     parser = CustomHelpParser(description="Text to JSON CLI")
     parser.add_argument("--setup", action="store_true", help="Run the setup command")
     parser.add_argument("--schema", type=str, help="Path to the schema file")
+    parser.add_argument("--version", action="store_true", help="Show the version and exit")
     args = parser.parse_args()
+
+    if args.version:
+        print(f"jsonthat CLI version {__version__}")
+        return
 
     if args.setup:
         setup_command()

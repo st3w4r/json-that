@@ -5,3 +5,7 @@ format:
 
 build:
 	poetry build
+
+patch:
+	poetry version patch
+	python bump_version.py
