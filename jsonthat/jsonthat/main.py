@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Optional
 import yaml
 import argparse
 
@@ -12,7 +12,7 @@ class LLMProvider(ABC):
     @abstractmethod
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, any]:
         pass
 
 
@@ -22,7 +22,7 @@ class OpenAIProvider(LLMProvider):
 
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, any]:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -66,7 +66,7 @@ class ClaudeProvider(LLMProvider):
 
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, any]:
         headers = {
             "x-api-key": self.api_key,
             "Content-Type": "application/json",
