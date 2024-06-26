@@ -4,50 +4,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shell Command Card</title>
+    <title>Shell Command to JSON UI</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #1a1a2e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .card {
-            background-color: #1a1a2e;
-            color: #f5f5f5;
-            width: 600px;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .header {
-            font-size: 24px;
-            font-weight: bold;
+            /* Navy blue background */
             color: #f5c518;
-            margin-bottom: 20px;
+            margin: 0;
+            /* Removes default margin */
+            display: flex;
+            /* Enables flexbox */
+            justify-content: center;
+            /* Centers content horizontally */
+            align-items: center;
+            /* Centers content vertically */
+            min-height: 100vh;
+            /* Minimum height of viewport */
+            padding: 20px;
+            font-size: 16px;
         }
 
-        .code-block {
+        .container {
+            width: 80%;
+            max-width: 600px;
+            /* background-color: #16213e; Darker shade for the container */
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .code {
             background-color: #272822;
+            /* Dark gray for code block */
             color: #f8f8f2;
-            font-family: 'Courier New', Courier, monospace;
+            /* Soft white for code text */
             padding: 10px;
             border-radius: 5px;
-            margin-bottom: 20px;
-            display: block;
-            width: 100%;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 15px;
         }
 
-        .description {
-            font-size: 16px;
-            color: #f5c518;
-            margin-bottom: 20px;
-            line-height: 1.5;
+        .json-output {
+            background-color: #272822;
+            /* Dark gray for JSON output */
+            color: #f8f8f2;
+            /* Soft white for JSON text */
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 15px;
+            overflow: auto;
+        }
+
+        button {
+            background-color: #f5c518;
+            /* Yellow for buttons */
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .button-container {
+            /* width: 100%; */
+            display: flex;
+            justify-content: space-between;
+            padding-top: 10px;
+        }
+
+        .download-button {
+            margin: 0 10px 0 0;
+            flex: 1;
+            background-color: #f5c518;
+            color: #1a1a2e;
+        }
+
+        .download-button:hover {
+            background-color: #e5b518;
+        }
+
+        .share-button {
+            margin: 0 0 0 10px;
+            flex: 1;
+            background-color: #1da1f2;
+            color: #fff;
+        }
+
+        .share-button:hover {
+            background-color: #0d95e8;
         }
 
         .branding {
@@ -60,67 +107,19 @@
             color: #f5c518;
             text-decoration: none;
         }
-
-        .highlight {
-            color: #f5c518;
-            font-weight: bold;
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .download-button,
-        .share-button {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .download-button {
-            background-color: #f5c518;
-            color: #1a1a2e;
-        }
-
-        .download-button:hover {
-            background-color: #e5b518;
-        }
-
-        .share-button {
-            background-color: #1da1f2;
-            color: #fff;
-        }
-
-        .share-button:hover {
-            background-color: #0d95e8;
-        }
     </style>
 </head>
 
 <body>
-    <div class="card" id="card-content">
-        <div class="header">Shell command from text to JSON</div>
-        <div class="code-block">
-            <code>echo "my name is Jay" | jt</code>
-        </div>
-        <div class="description">
-            Transforms raw text to JSON. For example, the above command produces:
-            <pre class="code-block">
-{
-  "name": "Jay"
+    <div class="container">
+        <h2>Shell command from text to JSON</h2>
+        <p class="code">echo "my name is Jay" | jt</p>
+        <p>Transforms raw text to JSON. For example, the above command produces:</p>
+        <pre class="json-output">{
+    "name": "Jay"
 }</pre>
-        </div>
-        <div class="description">
-            To install the tool, use:
-            <pre class="code-block">pip install jsonthat</pre>
-        </div>
+        <p>To install the tool, use:</p>
+        <p class="code">pip install jsonthat</p>
         <div class="branding">
             <a href="https://x.com/st3w4r/">@st3w4r</a>
             <a href="https://x.com/_buildspace/">@_buildspace</a>
@@ -135,28 +134,28 @@
 
     <script>
         function downloadCard() {
-            const cardContent = document.getElementById('card-content').innerText;
+            const cardContent = document.querySelector('.container').innerText;
             const lines = cardContent.split('\n');
             const filteredLines = lines.filter(line => !line.includes('Download Card') && !line.includes('Share on X/Twitter'));
-            const formattedContent = filteredLines.join('\n\n') + '\n\nhttps://x.com/st3w4r/';
+            const formattedContent = filteredLines.join('\n') + '\n\nhttps://x.com/st3w4r/';
 
             const element = document.createElement('a');
             const file = new Blob([formattedContent], { type: 'text/plain' });
             element.href = URL.createObjectURL(file);
             element.download = 'shell_command_card.txt';
-            document.body.appendChild(element); // Required for this to work in FireFox
+            document.body.appendChild(element);
             element.click();
             document.body.removeChild(element);
         }
 
         function shareOnTwitter() {
-            const title = document.querySelector('.header').innerText;
-            const command = document.querySelector('.code-block code').innerText;
-            const output = document.querySelectorAll('.description .code-block')[0].innerText;
-            const installCommand = document.querySelectorAll('.description .code-block')[1].innerText;
-            const twitterHandle = document.querySelector('.branding').innerText;
+            const title = document.querySelector('h2').innerText;
+            const command = document.querySelectorAll('.code')[0].innerText;
+            const output = document.querySelector('.json-output').innerText;
+            const installCommand = document.querySelectorAll('.code')[1].innerText;
+            const twitterHandles = Array.from(document.querySelectorAll('.branding')).map(a => a.innerText).join(' ');
 
-            const textToShare = encodeURIComponent(`${title}\n\nCommand:\n${command}\n\nOutput:\n${output}\n\nInstall:\n${installCommand}\n\n${twitterHandle}`);
+            const textToShare = encodeURIComponent(`${title}\n\nCommand:\n${command}\n\nOutput:\n${output}\n\nInstall:\n${installCommand}\n\n${twitterHandles}`);
             const twitterUrl = `https://twitter.com/intent/tweet?text=${textToShare}`;
             window.open(twitterUrl, '_blank');
         }
