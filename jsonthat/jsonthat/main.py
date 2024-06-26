@@ -171,12 +171,26 @@ def setup_command():
     print("Welcome to 'json that' CLI setup!")
 
     while True:
-        provider = input("Choose your LLM provider (openai/claude): ").lower()
-        if provider in ["openai", "claude"]:
-            break
-        print("Invalid choice. Please enter 'openai' or 'claude'.")
+        try:
+            provider = input("Choose your LLM provider (openai/claude): ").lower()
+            if provider in ["openai", "claude"]:
+                break
+            print("Invalid choice. Please enter 'openai' or 'claude'.")
+        except KeyboardInterrupt:
+            print("\nSetup aborted.")
+            sys.exit(1)
+        except EOFError:
+            print("\nSetup aborted.")
+            sys.exit(1)
 
-    api_key = input(f"Enter your {provider.capitalize()} API key: ")
+    try:
+        api_key = input(f"Enter your {provider.capitalize()} API key: ")
+    except KeyboardInterrupt:
+        print("\nSetup aborted.")
+        sys.exit(1)
+    except EOFError:
+        print("\nSetup aborted.")
+        sys.exit(1)
 
     config.set("provider", provider)
     config.set("api_key", api_key)
