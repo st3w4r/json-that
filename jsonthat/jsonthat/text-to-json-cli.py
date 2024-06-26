@@ -25,7 +25,8 @@ class OpenAIProvider(LLMProvider):
         
         system_message = "You are a helpful assistant that transforms text into JSON format."
         if schema:
-            system_message += f" Use the following schema to structure the output: {schema}"
+            system_message += f" Use the following JSON schema to structure the output: {schema}\n"
+            system_message += f"Without including extra schema inforamtion back in the response"
         
         data = {
             "model": "gpt-3.5-turbo",
@@ -33,7 +34,8 @@ class OpenAIProvider(LLMProvider):
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": f"Transform the following text into a JSON format: {text}"}
             ],
-            "temperature": 0  # Set temperature to 0 for deterministic output
+            "temperature": 0,  # Set temperature to 0 for deterministic output
+            "response_format": {"type": "json_object"},
         }
         
         response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
@@ -56,7 +58,8 @@ class AnthropicProvider(LLMProvider):
         
         system_message = "You are a helpful assistant that transforms text into JSON format."
         if schema:
-            system_message += f" Use the following schema to structure the output: {schema}"
+            system_message += f" Use the following JSON schema to structure the output: {schema}\n"
+            system_message += f"Without including extra schema inforamtion back in the response"
         
         data = {
             "model": "claude-3-opus-20240229",
@@ -131,7 +134,7 @@ def read_schema_file(file_path: str) -> str:
 def setup_command():
     config = Config()
     
-    print("Welcome to the Text-to-JSON CLI setup!")
+    print("Welcome to the json that CLI setup!")
     
     while True:
         provider = input("Choose your LLM provider (openai/anthropic): ").lower()
