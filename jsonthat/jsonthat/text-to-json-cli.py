@@ -23,10 +23,10 @@ class OpenAIProvider(LLMProvider):
             "Content-Type": "application/json"
         }
         
-        system_message = "You are a helpful assistant that transforms text into JSON format."
+        system_message = "transform the raw text to json\n"
         if schema:
             system_message += f" Use the following JSON schema to structure the output: {schema}\n"
-            system_message += f"Without including extra schema inforamtion back in the response"
+            system_message += "Without including extra schema information back in the response."
         
         data = {
             "model": "gpt-3.5-turbo",
@@ -35,7 +35,6 @@ class OpenAIProvider(LLMProvider):
                 {"role": "user", "content": f"Transform the following text into a JSON format: {text}"}
             ],
             "temperature": 0,  # Set temperature to 0 for deterministic output
-            "response_format": {"type": "json_object"},
         }
         
         response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data)
@@ -46,27 +45,29 @@ class OpenAIProvider(LLMProvider):
         
         return json.loads(transformed_text)
 
-class AnthropicProvider(LLMProvider):
+class ClaudeProvider(LLMProvider):
     def __init__(self, api_key: str):
         self.api_key = api_key
 
     def transform_text_to_json(self, text: str, schema: Optional[str] = None) -> Dict[str, Any]:
         headers = {
-            "X-API-Key": self.api_key,
-            "Content-Type": "application/json"
+            "x-api-key": self.api_key,
+            "Content-Type": "application/json",
+            "anthropic-version": "2023-06-01",
         }
         
-        system_message = "You are a helpful assistant that transforms text into JSON format."
+        system_message = "transform the raw text to json\n"
         if schema:
             system_message += f" Use the following JSON schema to structure the output: {schema}\n"
-            system_message += f"Without including extra schema inforamtion back in the response"
+            system_message += "Without including extra schema information back in the response."
         
+        full_user_message = system_message+f"\nTransform the following text into a JSON format: {text}\n\nOnly output json response without any comment or extra information."
+
         data = {
-            "model": "claude-3-opus-20240229",
-            "max_tokens": 1000,
+            "model": "claude-3-5-sonnet-20240620",
+            "max_tokens": 1024,
             "messages": [
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": f"Transform the following text into a JSON format: {text}"}
+                {"role": "user", "content": full_user_message}
             ],
             "temperature": 0  # Set temperature to 0 for deterministic output
         }
@@ -115,8 +116,8 @@ def get_provider(config: Config) -> LLMProvider:
 
     if provider_name == 'openai':
         return OpenAIProvider(api_key)
-    elif provider_name == 'anthropic':
-        return AnthropicProvider(api_key)
+    elif provider_name == 'claude':
+        return ClaudeProvider(api_key)
     else:
         raise ValueError(f"Unsupported LLM provider: {provider_name}")
 
@@ -137,10 +138,10 @@ def setup_command():
     print("Welcome to the json that CLI setup!")
     
     while True:
-        provider = input("Choose your LLM provider (openai/anthropic): ").lower()
-        if provider in ['openai', 'anthropic']:
+        provider = input("Choose your LLM provider (openai/claude): ").lower()
+        if provider in ['openai', 'claude']:
             break
-        print("Invalid choice. Please enter 'openai' or 'anthropic'.")
+        print("Invalid choice. Please enter 'openai' or 'claude'.")
     
     api_key = input(f"Enter your {provider.capitalize()} API key: ")
     
@@ -149,14 +150,38 @@ def setup_command():
     
     print(f"Configuration saved to {config.config_file}")
 
+
+def example():
+    print()
+    print("examples:")
+    print("  echo 'raw text' | jsonthat")
+    print("  echo 'raw text' | jt")
+    print("  echo 'raw text' | jt -s schema.json")
+    print("""
+  echo 'my name is jay' | jt
+  {
+    "name": "Jay"
+  }""")
+    print()
+
+
+class CustomHelpParser(argparse.ArgumentParser):
+    def print_help(self):
+        super().print_help()
+        example()
+
 def main():
-    parser = argparse.ArgumentParser(description="Text to JSON CLI")
+    parser = CustomHelpParser(description="Text to JSON CLI")
     parser.add_argument('--setup', action='store_true', help="Run the setup command")
     parser.add_argument('--schema', type=str, help="Path to the schema file")
     args = parser.parse_args()
 
     if args.setup:
         setup_command()
+        return
+
+    if sys.stdin.isatty():
+        parser.print_help()
         return
 
     config = Config()
