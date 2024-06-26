@@ -141,7 +141,7 @@ def get_provider(config: Config) -> LLMProvider:
 
     if not api_key:
         raise ValueError(
-            "API key not found. Please run the setup command or set the LLM_API_KEY environment variable."
+            "API key not found.\nPlease run the setup command:\njt --setup\n\nor\n\nSet the LLM_API_KEY and LLM_PROVIDER environment variable."
         )
 
     if provider_name == "openai":
@@ -168,7 +168,7 @@ def read_schema_file(file_path: str) -> str:
 def setup_command():
     config = Config()
 
-    print("Welcome to the json that CLI setup!")
+    print("Welcome to 'json that' CLI setup!")
 
     while True:
         provider = input("Choose your LLM provider (openai/claude): ").lower()
