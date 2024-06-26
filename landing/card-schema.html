@@ -66,18 +66,27 @@
             font-weight: bold;
         }
 
-        .download-button {
-            display: block;
-            width: 100%;
-            padding: 10px;
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
             margin-top: 20px;
+        }
+
+        .download-button,
+        .share-button {
+            flex: 1;
+            padding: 10px;
             text-align: center;
-            background-color: #f5c518;
-            color: #1a1a2e;
             border: none;
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
+        }
+
+        .download-button {
+            background-color: #f5c518;
+            color: #1a1a2e;
         }
 
         .download-button:hover {
@@ -85,17 +94,8 @@
         }
 
         .share-button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-top: 20px;
-            text-align: center;
             background-color: #1da1f2;
             color: #fff;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
         }
 
         .share-button:hover {
@@ -148,15 +148,17 @@
             <a href="https://x.com/_nightsweekends/">@_nightsweekends</a>
             #devtool #json #LLM #ai
         </div>
-        <button class="download-button" onclick="downloadCard()">Download Card</button>
-        <button class="share-button" onclick="shareOnTwitter()">Share on Twitter</button>
+        <div class="button-container">
+            <button class="download-button" onclick="downloadCard()">Download Card</button>
+            <button class="share-button" onclick="shareOnTwitter()">Share on X/Twitter</button>
+        </div>
     </div>
 
     <script>
         function downloadCard() {
             const cardContent = document.getElementById('card-content').innerText;
             const lines = cardContent.split('\n');
-            const filteredLines = lines.filter(line => !line.includes('Download Card'));
+            const filteredLines = lines.filter(line => !line.includes('Download Card') && !line.includes('Share on X/Twitter'));
             const formattedContent = filteredLines.join('\n\n') + '\n\nhttps://x.com/st3w4r/';
 
             const element = document.createElement('a');
@@ -167,7 +169,6 @@
             element.click();
             document.body.removeChild(element);
         }
-
 
         function shareOnTwitter() {
             const title = document.querySelector('.header').innerText;
@@ -180,9 +181,6 @@
             const twitterUrl = `https://twitter.com/intent/tweet?text=${textToShare}`;
             window.open(twitterUrl, '_blank');
         }
-
-
-
     </script>
 </body>
 

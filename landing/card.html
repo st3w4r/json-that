@@ -129,7 +129,7 @@
         </div>
         <div class="button-container">
             <button class="download-button" onclick="downloadCard()">Download Card</button>
-            <button class="share-button" onclick="shareOnTwitter()">Share on Twitter</button>
+            <button class="share-button" onclick="shareOnTwitter()">Share on X/Twitter</button>
         </div>
     </div>
 
@@ -137,7 +137,7 @@
         function downloadCard() {
             const cardContent = document.getElementById('card-content').innerText;
             const lines = cardContent.split('\n');
-            const filteredLines = lines.filter(line => !line.includes('Download Card') && !line.includes('Share on Twitter'));
+            const filteredLines = lines.filter(line => !line.includes('Download Card') && !line.includes('Share on X/Twitter'));
             const formattedContent = filteredLines.join('\n\n') + '\n\nhttps://x.com/st3w4r/';
 
             const element = document.createElement('a');
