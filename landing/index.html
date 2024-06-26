@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>json that</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            /* Set background to white */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header,
+        main,
+        footer {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        h1,
+        h2 {
+            color: #222;
+        }
+
+        p,
+        li {
+            color: #555;
+            /* Lighten text color for better contrast */
+            line-height: 1.5;
+        }
+
+        code {
+            background-color: #f7f7f7;
+            display: block;
+            padding: 10px;
+            margin-top: 10px;
+            border-left: 5px solid #5a5a5a;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+        }
+
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        li {
+            padding: 5px 0;
+        }
+
+        footer {
+            margin-top: auto;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>JSON THAT</h1>
+        <h3>Text-to-json CLI Tool</h3>
+        <p>Transform textual content into JSON format using this command-line interface tool, powered by large language
+            models.</p>
+    </header>
+    <main>
+        <section>
+            <h2>Installation</h2>
+            <code>pip install jsonthat</code>
+            <p>Start by setting up your LLM provider and enter your API key when prompted:</p>
+            <code>jt --setup</code>
+            <p>Display usage</p>
+            <code>jt -h</code>
+        </section>
+        <section>
+            <h2>Usage</h2>
+            <p>To process text into JSON, use:</p>
+            <code>echo "Your sample text" | jt</code>
+            <code>echo "Your sample text" | jt --schema json_schema.json</code>
+            <code>
+<pre>$ echo 'my name is jay' | jt
+
+{
+    "name": "Jay"
+}</pre>
+            </code>
+        </section>
+        <section>
+            <h2>Features</h2>
+            <ul>
+                <li>Supports <b>json schema</b> to guide outputs</li>
+                <li><b>Pipe</b> content directly</li>
+                <li>Multi-LLM provider: <b>openai, anthropic</b></li>
+            </ul>
+        </section>
+        <section>
+            <h2>Configuration</h2>
+            <h3>Config file</h3>
+            <p>Configurations are managed through:</p>
+            <code>~/.config/text_to_json_cli/config.yaml</code>
+            <p>Ensure your provider details and API key are set here.</p>
+        </section>
+        <section>
+            <h3>Environment Variables</h3>
+            <p>To configure the CLI tool, you can set the following environment variables:</p>
+            <code>export LLM_PROVIDER='openai'<br> 
+                export LLM_API_KEY='your_api_key_here'
+            </code>
+            <p>Specifies the large language model provider (e.g.,
+                'openai' or
+                'anthropic') and API key for the specified LLM provider.
+            </p>
+        </section>
+        <section>
+            <h2>Resources</h2>
+            <p>GitHub Repository: <a href="https://github.com/st3w4r/json-that">json-that</a></p>
+            <p>PyPi Package: <a href="https://pypi.org/project/jsonthat/">jsonthat</a></p>
+        </section>
+    </main>
+    <footer>
+    </footer>
+</body>
+
+</html>
