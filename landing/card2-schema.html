@@ -154,7 +154,7 @@
             const cardContent = document.querySelector('.container').innerText;
             const lines = cardContent.split('\n');
             const filteredLines = lines.filter(line => !line.includes('Download Card') && !line.includes('Share on X/Twitter'));
-            const formattedContent = filteredLines.join('\n');
+            const formattedContent = filteredLines.join('\n') + '\n\nhttps://x.com/st3w4r/';
 
             const element = document.createElement('a');
             const file = new Blob([formattedContent], { type: 'text/plain' });
@@ -169,7 +169,10 @@
             const title = document.querySelector('h2').innerText;
             const command = document.querySelector('.code').innerText;
             const output = document.querySelector('.json-output').innerText;
-            const textToShare = encodeURIComponent(`${title}\n\nCommand:\n${command}\n\nOutput:\n${output}`);
+            const installCommand = document.querySelectorAll('.code')[1].innerText;
+            const twitterHandles = Array.from(document.querySelectorAll('.branding')).map(a => a.innerText).join(' ');
+
+            const textToShare = encodeURIComponent(`${title}\n\nCommand:\n${command}\n\nOutput:\n${output}\n\nInstall:\n${installCommand}\n\n${twitterHandles}`);
             const twitterUrl = `https://twitter.com/intent/tweet?text=${textToShare}`;
             window.open(twitterUrl, '_blank');
         }
