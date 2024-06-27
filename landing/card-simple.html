@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON That - Text-to-JSON Feature</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .header {
+            background-color: #3b82f6;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #3b82f6;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            background-color: #f7f7f7;
+            border-radius: 4px;
+            padding: 10px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+
+        .footer {
+            background-color: #f7f7f7;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="header">
+            <h1 id="title"></h1>
+            <p id="subtitle"></p>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h2>Command</h2>
+                <pre id="command"></pre>
+            </div>
+            <div class="section">
+                <h2>Output</h2>
+                <pre id="output"></pre>
+            </div>
+            <div class="section">
+                <h2>Install</h2>
+                <pre id="install-command"></pre>
+            </div>
+        </div>
+        <div class="footer">
+            <a id="learn-more" href="#">Learn More</a>
+        </div>
+    </div>
+
+    <script>
+        // Function to populate the card with content
+        function populateCard(data) {
+            document.getElementById('title').textContent = data.title;
+            document.getElementById('subtitle').textContent = data.subtitle;
+            document.getElementById('command').textContent = data.command;
+            document.getElementById('output').textContent = data.output;
+            document.getElementById('install-command').textContent = data.installCommand;
+            document.getElementById('learn-more').href = data.link;
+        }
+
+        // Card data with the updated title and subtitle
+        const cardData = {
+            title: "JSON THAT",
+            subtitle: "Transforms plain text to JSON.",
+            command: 'echo "my name is Jay" | jt',
+            output: `{
+    "name": "Jay"
+}`,
+            installCommand: "pip install jsonthat",
+            link: "https://json-that.pages.dev/"
+        };
+
+        // Populate the card when the page loads
+        window.onload = function () {
+            populateCard(cardData);
+        };
+    </script>
+</body>
+
+</html>
