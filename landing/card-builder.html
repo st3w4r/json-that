@@ -107,6 +107,7 @@
             transition: background-color 0.3s, color 0.3s;
             white-space: pre-wrap;
             word-break: break-all;
+            line-height: 1.5;
         }
 
         .footer {
@@ -174,6 +175,11 @@
             margin-top: 20px;
             margin-bottom: 10px;
         }
+
+        #command {
+            height: 100px;
+            resize: vertical;
+        }
     </style>
 </head>
 
@@ -186,7 +192,7 @@
             <label for="subtitle">Subtitle:</label>
             <input type="text" id="subtitle" value="Transforms plain text to JSON.">
             <label for="command">Command:</label>
-            <input type="text" id="command" value='echo "my name is Jay" | jt'>
+            <textarea id="command" rows="4">echo "my name is Jay" | jt</textarea>
             <label for="output">Output:</label>
             <textarea id="output" rows="4">
 {
