@@ -117,6 +117,7 @@
             document.getElementById('output').textContent = data.output;
             document.getElementById('install-command').textContent = data.installCommand;
             document.getElementById('learn-more').href = data.link;
+            document.getElementById('learn-more').textContent = data.link.replace('https://', '').replace(/\/$/, '');;
         }
 
         // Card data with the updated title and subtitle
