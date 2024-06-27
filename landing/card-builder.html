@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON THAT Card Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 100%;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .input-form {
+            width: 45%;
+            min-width: 300px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, color 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .input-form label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        .input-form input,
+        .input-form textarea {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            background-color: white;
+            color: black;
+            border: 1px solid #ccc;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        .card-preview {
+            width: 45%;
+            min-width: 300px;
+            overflow-x: auto;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: fit-content;
+            min-width: 400px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            background-color: #3b82f6;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #3b82f6;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            background-color: #f7f7f7;
+            border-radius: 4px;
+            padding: 10px;
+            overflow-x: auto;
+            font-size: 14px;
+            transition: background-color 0.3s, color 0.3s;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .footer {
+            background-color: #f7f7f7;
+            padding: 15px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        #download-btn,
+        #dark-mode-toggle {
+            display: inline-block;
+            margin-top: 20px;
+            margin-right: 10px;
+            padding: 10px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #download-btn:hover,
+        #dark-mode-toggle:hover {
+            background-color: #2563eb;
+        }
+
+        #card-width-container,
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #card-width {
+            width: 80px;
+            margin-right: 10px;
+        }
+
+        #auto-width {
+            margin-left: 10px;
+        }
+
+        .color-picker-container label {
+            margin-right: 10px;
+        }
+
+        .color-picker-container input[type="color"] {
+            width: 50px;
+            height: 30px;
+            padding: 0;
+            border: none;
+        }
+
+        .color-mode-toggle {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="input-form">
+            <h2>Card Builder</h2>
+            <label for="title">Title:</label>
+            <input type="text" id="title" value="JSON THAT">
+            <label for="subtitle">Subtitle:</label>
+            <input type="text" id="subtitle" value="Transforms plain text to JSON.">
+            <label for="command">Command:</label>
+            <input type="text" id="command" value='echo "my name is Jay" | jt'>
+            <label for="output">Output:</label>
+            <textarea id="output" rows="4">
+{
+    "name": "Jay"
+}</textarea>
+            <label for="install-command">Install Command:</label>
+            <input type="text" id="install-command" value="pip install jsonthat">
+            <label for="link">Learn More Link:</label>
+            <input type="text" id="link" value="https://jsonthat.com/">
+            <div id="card-width-container">
+                <label for="card-width">Card Width (px):</label>
+                <input type="number" id="card-width" min="400" value="400">
+                <input type="checkbox" id="auto-width" checked>
+                <label for="auto-width">Auto-adjust</label>
+            </div>
+            <h3>Color Customization</h3>
+            <div class="color-mode-toggle">
+                <input type="radio" id="light-mode-colors" name="color-mode" value="light" checked>
+                <label for="light-mode-colors">Light Mode Colors</label>
+                <input type="radio" id="dark-mode-colors" name="color-mode" value="dark">
+                <label for="dark-mode-colors">Dark Mode Colors</label>
+            </div>
+            <div id="light-mode-colors-container">
+                <div class="color-picker-container">
+                    <label for="header-bg-color-light">Header Background:</label>
+                    <input type="color" id="header-bg-color-light" value="#3b82f6">
+                </div>
+                <div class="color-picker-container">
+                    <label for="header-text-color-light">Header Text:</label>
+                    <input type="color" id="header-text-color-light" value="#ffffff">
+                </div>
+                <div class="color-picker-container">
+                    <label for="body-bg-color-light">Body Background:</label>
+                    <input type="color" id="body-bg-color-light" value="#ffffff">
+                </div>
+                <div class="color-picker-container">
+                    <label for="body-text-color-light">Body Text:</label>
+                    <input type="color" id="body-text-color-light" value="#000000">
+                </div>
+                <div class="color-picker-container">
+                    <label for="section-title-color-light">Section Titles:</label>
+                    <input type="color" id="section-title-color-light" value="#3b82f6">
+                </div>
+                <div class="color-picker-container">
+                    <label for="pre-bg-color-light">Command/Output Background:</label>
+                    <input type="color" id="pre-bg-color-light" value="#f7f7f7">
+                </div>
+                <div class="color-picker-container">
+                    <label for="pre-text-color-light">Command/Output Text:</label>
+                    <input type="color" id="pre-text-color-light" value="#000000">
+                </div>
+                <div class="color-picker-container">
+                    <label for="footer-bg-color-light">Footer Background:</label>
+                    <input type="color" id="footer-bg-color-light" value="#f7f7f7">
+                </div>
+                <div class="color-picker-container">
+                    <label for="link-color-light">Link Color:</label>
+                    <input type="color" id="link-color-light" value="#3b82f6">
+                </div>
+            </div>
+            <div id="dark-mode-colors-container" style="display: none;">
+                <div class="color-picker-container">
+                    <label for="header-bg-color-dark">Header Background:</label>
+                    <input type="color" id="header-bg-color-dark" value="#1e3a8a">
+                </div>
+                <div class="color-picker-container">
+                    <label for="header-text-color-dark">Header Text:</label>
+                    <input type="color" id="header-text-color-dark" value="#ffffff">
+                </div>
+                <div class="color-picker-container">
+                    <label for="body-bg-color-dark">Body Background:</label>
+                    <input type="color" id="body-bg-color-dark" value="#1f2937">
+                </div>
+                <div class="color-picker-container">
+                    <label for="body-text-color-dark">Body Text:</label>
+                    <input type="color" id="body-text-color-dark" value="#e5e7eb">
+                </div>
+                <div class="color-picker-container">
+                    <label for="section-title-color-dark">Section Titles:</label>
+                    <input type="color" id="section-title-color-dark" value="#60a5fa">
+                </div>
+                <div class="color-picker-container">
+                    <label for="pre-bg-color-dark">Command/Output Background:</label>
+                    <input type="color" id="pre-bg-color-dark" value="#374151">
+                </div>
+                <div class="color-picker-container">
+                    <label for="pre-text-color-dark">Command/Output Text:</label>
+                    <input type="color" id="pre-text-color-dark" value="#e5e7eb">
+                </div>
+                <div class="color-picker-container">
+                    <label for="footer-bg-color-dark">Footer Background:</label>
+                    <input type="color" id="footer-bg-color-dark" value="#374151">
+                </div>
+                <div class="color-picker-container">
+                    <label for="link-color-dark">Link Color:</label>
+                    <input type="color" id="link-color-dark" value="#60a5fa">
+                </div>
+            </div>
+            <button id="download-btn">Download as PNG</button>
+            <button id="dark-mode-toggle">Toggle Dark Mode</button>
+        </div>
+        <div class="card-preview">
+            <h2>Card Preview</h2>
+            <div id="card-container">
+                <div class="card">
+                    <div class="header">
+                        <h1 id="card-title"></h1>
+                        <p id="card-subtitle"></p>
+                    </div>
+                    <div class="content">
+                        <div class="section">
+                            <h2>Command</h2>
+                            <pre id="card-command"></pre>
+                        </div>
+                        <div class="section">
+                            <h2>Output</h2>
+                            <pre id="card-output"></pre>
+                        </div>
+                        <div class="section">
+                            <h2>Install</h2>
+                            <pre id="card-install-command"></pre>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <a id="card-learn-more" href="#"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDarkMode = false;
+
+        function updateCard() {
+            document.getElementById('card-title').textContent = document.getElementById('title').value;
+            document.getElementById('card-subtitle').textContent = document.getElementById('subtitle').value;
+            document.getElementById('card-command').textContent = document.getElementById('command').value;
+            document.getElementById('card-output').textContent = document.getElementById('output').value;
+            document.getElementById('card-install-command').textContent = document.getElementById('install-command').value;
+            const link = document.getElementById('link').value;
+            document.getElementById('card-learn-more').href = link;
+            document.getElementById('card-learn-more').textContent = link.replace('https://', '').replace(/\/$/, '');
+
+            adjustCardWidth();
+            updateColors();
+        }
+
+        function adjustCardWidth() {
+            const card = document.querySelector('.card');
+            const content = document.querySelector('.content');
+            const autoAdjust = document.getElementById('auto-width').checked;
+            const customWidth = parseInt(document.getElementById('card-width').value);
+
+            if (autoAdjust) {
+                card.style.width = 'fit-content';
+                const contentWidth = content.scrollWidth;
+                card.style.width = Math.max(400, contentWidth) + 'px';
+            } else {
+                card.style.width = Math.max(400, customWidth) + 'px';
+            }
+        }
+
+        function updateColors() {
+            const mode = isDarkMode ? 'dark' : 'light';
+            const card = document.querySelector('.card');
+            const header = card.querySelector('.header');
+            const content = card.querySelector('.content');
+            const footer = card.querySelector('.footer');
+            const sectionTitles = card.querySelectorAll('.section h2');
+            const preElements = card.querySelectorAll('pre');
+            const link = card.querySelector('.footer a');
+
+            header.style.backgroundColor = document.getElementById(`header-bg-color-${mode}`).value;
+            header.style.color = document.getElementById(`header-text-color-${mode}`).value;
+            content.style.backgroundColor = document.getElementById(`body-bg-color-${mode}`).value;
+            content.style.color = document.getElementById(`body-text-color-${mode}`).value;
+            sectionTitles.forEach(title => {
+                title.style.color = document.getElementById(`section-title-color-${mode}`).value;
+            });
+            preElements.forEach(pre => {
+                pre.style.backgroundColor = document.getElementById(`pre-bg-color-${mode}`).value;
+                pre.style.color = document.getElementById(`pre-text-color-${mode}`).value;
+            });
+            footer.style.backgroundColor = document.getElementById(`footer-bg-color-${mode}`).value;
+            link.style.color = document.getElementById(`link-color-${mode}`).value;
+        }
+
+        // Add event listeners to all input fields
+        document.querySelectorAll('input, textarea').forEach(el => {
+            el.addEventListener('input', updateCard);
+        });
+
+        // Add event listeners for width control
+        document.getElementById('card-width').addEventListener('input', adjustCardWidth);
+        document.getElementById('auto-width').addEventListener('change', adjustCardWidth);
+
+        // Add event listeners for color pickers
+        document.querySelectorAll('input[type="color"]').forEach(el => {
+            el.addEventListener('input', updateColors);
+        });
+
+        // Add event listeners for color mode toggle
+        document.querySelectorAll('input[name="color-mode"]').forEach(el => {
+            el.addEventListener('change', function () {
+                const lightModeContainer = document.getElementById('light-mode-colors-container');
+                const darkModeContainer = document.getElementById('dark-mode-colors-container');
+                if (this.value === 'light') {
+                    lightModeContainer.style.display = 'block';
+                    darkModeContainer.style.display = 'none';
+                } else {
+                    lightModeContainer.style.display = 'none';
+                    darkModeContainer.style.display = 'block';
+                }
+            });
+        });
+
+        // Initial card update
+        updateCard();
+
+        // Download functionality
+        document.getElementById('download-btn').addEventListener('click', function () {
+            html2canvas(document.querySelector(".card")).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'json-that-card.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        });
+
+        // Dark mode toggle
+        document.getElementById('dark-mode-toggle').addEventListener('click', function () {
+            isDarkMode = !isDarkMode;
+            updateColors();
+            // Update the color mode radio buttons
+            if (isDarkMode) {
+                document.getElementById('dark-mode-colors').checked = true;
+            } else {
+                document.getElementById('light-mode-colors').checked = true;
+            }
+            // Trigger the change event to update the color picker visibility
+            document.querySelector('input[name="color-mode"]:checked').dispatchEvent(new Event('change'));
+        });
+
+        // Adjust card width on window resize
+        window.addEventListener('resize', adjustCardWidth);
+    </script>
+
+</body>
+
+</html>
