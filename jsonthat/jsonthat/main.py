@@ -39,7 +39,7 @@ class OpenAIProvider(LLMProvider):
             )
 
         data = {
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4o",
             "messages": [
                 {"role": "system", "content": system_message},
                 {
@@ -47,7 +47,8 @@ class OpenAIProvider(LLMProvider):
                     "content": f"Transform the following text into a JSON format: {text}",
                 },
             ],
-            "temperature": 0,  # Set temperature to 0 for deterministic output
+            "temperature": 0,  # Set temperature to 0 for deterministic output,
+            "response_format": { "type": "json_object" },
         }
 
         response = requests.post(
