@@ -72,10 +72,8 @@
         <h1>JSON THAT</h1>
         <h3>Text-to-json CLI Tool</h3>
         <section>
-
             <p>Transform textual content into JSON format using this command-line interface tool, powered by large
-                language
-                models.</p>
+                language models.</p>
         </section>
         <section>
             <p><a href="https://github.com/st3w4r/json-that">GitHub Repository: json-that</a></p>
@@ -86,30 +84,67 @@
         <section>
             <h2>Installation</h2>
             <code>pip install jsonthat</code>
-            <p>Start by setting up your LLM provider and enter your API key when prompted:</p>
+            <p>Start by setting up your LLM providers and enter your API keys when prompted:</p>
             <code>jt --setup</code>
             <p>Display usage</p>
             <code>jt -h</code>
         </section>
         <section>
             <h2>Usage</h2>
-            <p>To process text into JSON, use:</p>
-            <code>echo "Your sample text" | jt</code>
-            <code>echo "Your sample text" | jt --schema json_schema.json</code>
-            <code>
-<pre>$ echo 'my name is jay' | jt
+            <p>Here are various ways to use the JSON THAT CLI tool:</p>
 
+            <h3>Basic Usage</h3>
+            <p>Process text into JSON using the default provider:</p>
+            <pre><code>$ echo "My name is Jay and I'm 30 years old" | jt
 {
-    "name": "Jay"
-}</pre>
-            </code>
+  "name": "Jay",
+  "age": 30
+}</code></pre>
+
+            <h3>Using a Specific Provider</h3>
+            <p>Specify a provider for a single command:</p>
+            <pre><code>$ echo "Convert this sentence into JSON" | jt --provider openai
+{
+  "action": "Convert",
+  "subject": "sentence",
+  "target_format": "JSON"
+}</code></pre>
+
+            <h3>Using a JSON Schema</h3>
+            <p>Guide the output using a JSON schema:</p>
+            <pre><code>$ echo "Alice is a software engineer with 5 years of experience" | jt --schema person_schema.json
+{
+  "name": "Alice",
+  "occupation": "software engineer",
+  "yearsOfExperience": 5
+}</code></pre>
+
+            <h3>Processing a File</h3>
+            <p>Convert the contents of a file to JSON:</p>
+            <pre><code>$ cat input.txt | jt
+{
+  "content": "This is the content of input.txt converted to JSON format."
+}</code></pre>
+
+            <h3>Combining Options</h3>
+            <p>Use multiple options together:</p>
+            <pre><code>$ echo "Transform this using Ollama and a custom schema" | jt --provider ollama --schema custom_schema.json
+{
+  "transformed_text": "This has been transformed using Ollama and a custom schema",
+  "provider_used": "ollama",
+  "schema_applied": true
+}</code></pre>
         </section>
         <section>
             <h2>Features</h2>
             <ul>
                 <li>Supports <b>json schema</b> to guide outputs</li>
                 <li><b>Pipe</b> content directly</li>
-                <li>Multi-LLM provider: <b>openai, claude</b></li>
+                <li>Multi-LLM provider support: <b>OpenAI, Claude, Ollama</b></li>
+                <li><b>Local</b> LLM support with <b>Ollama</b></li>
+                <li>Store <b>multiple provider configurations</b></li>
+                <li>Set a <b>default provider</b></li>
+                <li>Choose provider via <b>command-line flag</b></li>
             </ul>
         </section>
         <section>
@@ -117,18 +152,23 @@
             <h3>Config file</h3>
             <p>Configurations are managed through:</p>
             <code>~/.config/jsonthat/config.yaml</code>
-            <p>Ensure your provider details and API key are set here.</p>
+            <p>The config file now stores multiple provider configurations and the default provider.</p>
         </section>
         <section>
             <h3>Environment Variables</h3>
             <p>To configure the CLI tool, you can set the following environment variables:</p>
-            <code>export LLM_PROVIDER='openai'<br> 
-                export LLM_API_KEY='your_api_key_here'
+            <code>export LLM_PROVIDER='openai'<br>
+            export LLM_API_KEY='your_api_key_here'<br>
+            export OLLAMA_API_URL='http://127.0.0.1:11434'<br>
+            export OLLAMA_MODEL='llama3'
             </code>
-            <p>Specifies the large language model provider (e.g.,
-                'openai' or
-                'claude') and API key for the specified LLM provider.
-            </p>
+            <p>Specifies the large language model provider (e.g., 'openai', 'claude', or 'ollama'), API key for the
+                specified LLM provider, and Ollama-specific configurations.</p>
+        </section>
+        <section>
+            <h3>Command-line Provider Selection</h3>
+            <p>You can specify the provider to use for a single command:</p>
+            <code>echo "Your sample text" | jt --provider ollama</code>
         </section>
     </main>
     <footer>
