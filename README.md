@@ -17,15 +17,16 @@ echo 'my name is jay' | jt
 ```
 
 
-## TODO:
+## Features
 
 - [x] json schema output
-- [x] prepare package for pip
-- [x] release the package
+- [x] Pipe content directly
+- [x] Multi-LLM provider support: OpenAI, Claude, Ollama
+- [x] Local LLM with Ollama
+- [x] CLI released as pip package
+
+## Coming
+
 - [ ] stream the output
 - [ ] handle long content
-- [x] mutli provier: openai, claude
-- [x] version flag
-- [x] landing page
-- [ ] documentation
-- [ ] local LLM
+- [ ] advance documentation
