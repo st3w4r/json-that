@@ -22,3 +22,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 jsonthat = "jsonthat.main:main"
 jt = "jsonthat.main:main"
+
+[project.urls]
+Homepage = "https://jsonthat.com/"
+Repository = "https://github.com/st3w4r/json-that"
