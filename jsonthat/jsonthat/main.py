@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Dict
 import yaml
 import argparse
 from .version import __version__
@@ -106,6 +106,44 @@ class ClaudeProvider(LLMProvider):
         return json.loads(transformed_text)
 
 
+class OllamaProvider(LLMProvider):
+    def __init__(self, api_url: str = "http://127.0.0.1:11434", model: str = "llama3"):
+        self.api_url = api_url
+        self.model = model
+
+    def transform_text_to_json(
+        self, text: str, schema: Optional[str] = None
+    ) -> dict[str, any]:
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        prompt = f"Transform the following text into a JSON format: {text}\n"
+        if schema:
+            prompt += f"Use the following JSON schema to structure the output: {schema}\n"
+        prompt += "Only output json response without any comment or extra information."
+
+        data = {
+            "prompt": prompt,
+            "model": self.model,
+            "format": "json",
+            "stream": False,
+            "options": {
+                "temperature": 0,  # Set temperature to 0 for deterministic output
+            }
+        }
+
+        response = requests.post(
+            f"{self.api_url}/api/generate", headers=headers, json=data
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        transformed_text = result["response"]
+
+        return json.loads(transformed_text)
+
+
 class Config:
     def __init__(self):
         self.config_file = self.get_config_file_path()
@@ -119,36 +157,54 @@ class Config:
         if os.path.exists(self.config_file):
             with open(self.config_file, "r") as f:
                 return yaml.safe_load(f)
-        return {}
+        return {"providers": {}, "default_provider": None}
 
     def save_config(self):
         os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
         with open(self.config_file, "w") as f:
             yaml.dump(self.config, f)
 
-    def get(self, key, fallback=None):
-        return self.config.get(key, fallback)
+    def get_provider_config(self, provider_name: str) -> Dict[str, str]:
+        return self.config["providers"].get(provider_name, {})
 
-    def set(self, key, value):
-        self.config[key] = value
+    def set_provider_config(self, provider_name: str, config: Dict[str, str]):
+        if "providers" not in self.config:
+            self.config["providers"] = {}
+        self.config["providers"][provider_name] = config
+        self.save_config()
+
+    def get_default_provider(self) -> Optional[str]:
+        return self.config.get("default_provider")
+
+    def set_default_provider(self, provider_name: str):
+        self.config["default_provider"] = provider_name
         self.save_config()
 
 
-def get_provider(config: Config) -> LLMProvider:
-    provider_name = (
-        os.environ.get("LLM_PROVIDER") or config.get("provider", "openai").lower()
-    )
-    api_key = os.environ.get("LLM_API_KEY") or config.get("api_key")
-
-    if not api_key:
-        raise ValueError(
-            "API key not found.\nPlease run the setup command:\njt --setup\n\nor\n\nSet the LLM_API_KEY and LLM_PROVIDER environment variable."
+def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProvider:
+    if not provider_name:
+        provider_name = (
+            os.environ.get("LLM_PROVIDER")
+            or config.get_default_provider()
+            or "openai"
         )
 
-    if provider_name == "openai":
-        return OpenAIProvider(api_key)
-    elif provider_name == "claude":
-        return ClaudeProvider(api_key)
+    provider_config = config.get_provider_config(provider_name)
+
+    if provider_name == "ollama":
+        api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get("api_url", "http://127.0.0.1:11434")
+        model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
+        return OllamaProvider(api_url, model)
+    elif provider_name in ["openai", "claude"]:
+        api_key = os.environ.get("LLM_API_KEY") or provider_config.get("api_key")
+        if not api_key:
+            raise ValueError(
+                f"API key not found for {provider_name}.\nPlease run the setup command:\njt --setup\n"
+            )
+        if provider_name == "openai":
+            return OpenAIProvider(api_key)
+        elif provider_name == "claude":
+            return ClaudeProvider(api_key)
     else:
         raise ValueError(f"Unsupported LLM provider: {provider_name}")
 
@@ -166,17 +222,15 @@ def read_schema_file(file_path: str) -> str:
         sys.exit(1)
 
 
-def setup_command():
-    config = Config()
-
+def setup_command(config: Config):
     print("Welcome to 'json that' CLI setup!")
 
     while True:
         try:
-            provider = input("Choose your LLM provider (openai/claude): ").lower()
-            if provider in ["openai", "claude"]:
+            provider = input("Choose your LLM provider (openai/claude/ollama): ").lower()
+            if provider in ["openai", "claude", "ollama"]:
                 break
-            print("Invalid choice. Please enter 'openai' or 'claude'.")
+            print("Invalid choice. Please enter 'openai', 'claude', or 'ollama'.")
         except KeyboardInterrupt:
             print("\nSetup aborted.")
             sys.exit(1)
@@ -184,17 +238,41 @@ def setup_command():
             print("\nSetup aborted.")
             sys.exit(1)
 
-    try:
-        api_key = input(f"Enter your {provider.capitalize()} API key: ")
-    except KeyboardInterrupt:
-        print("\nSetup aborted.")
-        sys.exit(1)
-    except EOFError:
-        print("\nSetup aborted.")
-        sys.exit(1)
+    provider_config = {}
 
-    config.set("provider", provider)
-    config.set("api_key", api_key)
+    if provider in ["openai", "claude"]:
+        try:
+            api_key = input(f"Enter your {provider.capitalize()} API key: ")
+            provider_config["api_key"] = api_key
+        except KeyboardInterrupt:
+            print("\nSetup aborted.")
+            sys.exit(1)
+        except EOFError:
+            print("\nSetup aborted.")
+            sys.exit(1)
+    elif provider == "ollama":
+        try:
+            api_url = input("Enter Ollama API URL (default: http://127.0.0.1:11434): ")
+            if not api_url:
+                api_url = "http://127.0.0.1:11434"
+            provider_config["api_url"] = api_url
+
+            model = input("Enter Ollama model name (default: llama3): ")
+            if not model:
+                model = "llama3"
+            provider_config["model"] = model
+        except KeyboardInterrupt:
+            print("\nSetup aborted.")
+            sys.exit(1)
+        except EOFError:
+            print("\nSetup aborted.")
+            sys.exit(1)
+
+    config.set_provider_config(provider, provider_config)
+
+    set_default = input("Do you want to set this as the default provider? (y/n): ").lower()
+    if set_default == 'y':
+        config.set_default_provider(provider)
 
     print(f"Configuration saved to {config.config_file}")
 
@@ -204,7 +282,8 @@ def example():
     print("examples:")
     print("  echo 'raw text' | jsonthat")
     print("  echo 'raw text' | jt")
-    print("  echo 'raw text' | jt -s schema.json")
+    print("  echo 'raw text' | jt --schema schema.json")
+    print("  echo 'raw text' | jt --provider openai")
     print("""
   echo 'my name is jay' | jt
   {
@@ -220,9 +299,12 @@ class CustomHelpParser(argparse.ArgumentParser):
 
 
 def main():
+    config = Config()
+
     parser = CustomHelpParser(description="Text to JSON CLI")
     parser.add_argument("--setup", action="store_true", help="Run the setup command")
     parser.add_argument("--schema", type=str, help="Path to the schema file")
+    parser.add_argument("--provider", type=str, help="Specify the LLM provider to use")
     parser.add_argument(
         "--version", action="store_true", help="Show the version and exit"
     )
@@ -233,17 +315,15 @@ def main():
         return
 
     if args.setup:
-        setup_command()
+        setup_command(config)
         return
 
     if sys.stdin.isatty():
         parser.print_help()
         return
 
-    config = Config()
-
     try:
-        provider = get_provider(config)
+        provider = get_provider(config, args.provider)
     except ValueError as e:
         print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(1)
