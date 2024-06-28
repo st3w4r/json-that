@@ -39,7 +39,7 @@ class OpenAIProvider(LLMProvider):
             )
 
         data = {
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4o",
             "messages": [
                 {"role": "system", "content": system_message},
                 {
@@ -47,7 +47,8 @@ class OpenAIProvider(LLMProvider):
                     "content": f"Transform the following text into a JSON format: {text}",
                 },
             ],
-            "temperature": 0,  # Set temperature to 0 for deterministic output
+            "temperature": 0,  # Set temperature to 0 for deterministic output,
+            "response_format": {"type": "json_object"},
         }
 
         response = requests.post(
@@ -120,7 +121,9 @@ class OllamaProvider(LLMProvider):
 
         prompt = f"Transform the following text into a JSON format: {text}\n"
         if schema:
-            prompt += f"Use the following JSON schema to structure the output: {schema}\n"
+            prompt += (
+                f"Use the following JSON schema to structure the output: {schema}\n"
+            )
         prompt += "Only output json response without any comment or extra information."
 
         data = {
@@ -130,7 +133,7 @@ class OllamaProvider(LLMProvider):
             "stream": False,
             "options": {
                 "temperature": 0,  # Set temperature to 0 for deterministic output
-            }
+            },
         }
 
         response = requests.post(
@@ -184,15 +187,15 @@ class Config:
 def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProvider:
     if not provider_name:
         provider_name = (
-            os.environ.get("LLM_PROVIDER")
-            or config.get_default_provider()
-            or "openai"
+            os.environ.get("LLM_PROVIDER") or config.get_default_provider() or "openai"
         )
 
     provider_config = config.get_provider_config(provider_name)
 
     if provider_name == "ollama":
-        api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get("api_url", "http://127.0.0.1:11434")
+        api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get(
+            "api_url", "http://127.0.0.1:11434"
+        )
         model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
         return OllamaProvider(api_url, model)
     elif provider_name in ["openai", "claude"]:
@@ -227,7 +230,9 @@ def setup_command(config: Config):
 
     while True:
         try:
-            provider = input("Choose your LLM provider (openai/claude/ollama): ").lower()
+            provider = input(
+                "Choose your LLM provider (openai/claude/ollama): "
+            ).lower()
             if provider in ["openai", "claude", "ollama"]:
                 break
             print("Invalid choice. Please enter 'openai', 'claude', or 'ollama'.")
@@ -270,8 +275,10 @@ def setup_command(config: Config):
 
     config.set_provider_config(provider, provider_config)
 
-    set_default = input("Do you want to set this as the default provider? (y/n): ").lower()
-    if set_default == 'y':
+    set_default = input(
+        "Do you want to set this as the default provider? (y/n): "
+    ).lower()
+    if set_default == "y":
         config.set_default_provider(provider)
 
     print(f"Configuration saved to {config.config_file}")
