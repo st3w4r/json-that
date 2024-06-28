@@ -130,8 +130,6 @@ class OllamaProvider(LLMProvider):
             "stream": False,
             "options": {
                 "temperature": 0,  # Set temperature to 0 for deterministic output
-                "top_p": 0.99,
-                "top_k": 100
             }
         }
 
