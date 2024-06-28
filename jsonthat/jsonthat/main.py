@@ -106,6 +106,45 @@ class ClaudeProvider(LLMProvider):
         return json.loads(transformed_text)
 
 
+class OllamaProvider(LLMProvider):
+    def __init__(self, api_url: str = "http://127.0.0.1:11434"):
+        self.api_url = api_url
+
+    def transform_text_to_json(
+        self, text: str, schema: Optional[str] = None
+    ) -> dict[str, any]:
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        prompt = f"Transform the following text into a JSON format: {text}\n"
+        if schema:
+            prompt += f"Use the following JSON schema to structure the output: {schema}\n"
+        prompt += "Only output json response without any comment or extra information."
+
+        data = {
+            "prompt": prompt,
+            "model": "llama3",
+            "format": "json",
+            "stream": False,
+            "options": {
+                "temperature": 0,  # Set temperature to 0 for deterministic output
+                "top_p": 0.99,
+                "top_k": 100
+            }
+        }
+
+        response = requests.post(
+            f"{self.api_url}/api/generate", headers=headers, json=data
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        transformed_text = result["response"]
+
+        return json.loads(transformed_text)
+
+
 class Config:
     def __init__(self):
         self.config_file = self.get_config_file_path()
@@ -140,15 +179,18 @@ def get_provider(config: Config) -> LLMProvider:
     )
     api_key = os.environ.get("LLM_API_KEY") or config.get("api_key")
 
-    if not api_key:
-        raise ValueError(
-            "API key not found.\nPlease run the setup command:\njt --setup\n\nor\n\nSet the LLM_API_KEY and LLM_PROVIDER environment variable."
-        )
-
-    if provider_name == "openai":
-        return OpenAIProvider(api_key)
-    elif provider_name == "claude":
-        return ClaudeProvider(api_key)
+    if provider_name == "ollama":
+        api_url = os.environ.get("OLLAMA_API_URL") or config.get("api_url", "http://127.0.0.1:11434")
+        return OllamaProvider(api_url)
+    elif provider_name in ["openai", "claude"]:
+        if not api_key:
+            raise ValueError(
+                "API key not found.\nPlease run the setup command:\njt --setup\n\nor\n\nSet the LLM_API_KEY and LLM_PROVIDER environment variable."
+            )
+        if provider_name == "openai":
+            return OpenAIProvider(api_key)
+        elif provider_name == "claude":
+            return ClaudeProvider(api_key)
     else:
         raise ValueError(f"Unsupported LLM provider: {provider_name}")
 
@@ -173,10 +215,10 @@ def setup_command():
 
     while True:
         try:
-            provider = input("Choose your LLM provider (openai/claude): ").lower()
-            if provider in ["openai", "claude"]:
+            provider = input("Choose your LLM provider (openai/claude/ollama): ").lower()
+            if provider in ["openai", "claude", "ollama"]:
                 break
-            print("Invalid choice. Please enter 'openai' or 'claude'.")
+            print("Invalid choice. Please enter 'openai', 'claude', or 'ollama'.")
         except KeyboardInterrupt:
             print("\nSetup aborted.")
             sys.exit(1)
@@ -184,17 +226,30 @@ def setup_command():
             print("\nSetup aborted.")
             sys.exit(1)
 
-    try:
-        api_key = input(f"Enter your {provider.capitalize()} API key: ")
-    except KeyboardInterrupt:
-        print("\nSetup aborted.")
-        sys.exit(1)
-    except EOFError:
-        print("\nSetup aborted.")
-        sys.exit(1)
-
     config.set("provider", provider)
-    config.set("api_key", api_key)
+
+    if provider in ["openai", "claude"]:
+        try:
+            api_key = input(f"Enter your {provider.capitalize()} API key: ")
+            config.set("api_key", api_key)
+        except KeyboardInterrupt:
+            print("\nSetup aborted.")
+            sys.exit(1)
+        except EOFError:
+            print("\nSetup aborted.")
+            sys.exit(1)
+    elif provider == "ollama":
+        try:
+            api_url = input("Enter Ollama API URL (default: http://127.0.0.1:11434): ")
+            if not api_url:
+                api_url = "http://127.0.0.1:11434"
+            config.set("api_url", api_url)
+        except KeyboardInterrupt:
+            print("\nSetup aborted.")
+            sys.exit(1)
+        except EOFError:
+            print("\nSetup aborted.")
+            sys.exit(1)
 
     print(f"Configuration saved to {config.config_file}")
 
