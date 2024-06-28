@@ -107,8 +107,9 @@ class ClaudeProvider(LLMProvider):
 
 
 class OllamaProvider(LLMProvider):
-    def __init__(self, api_url: str = "http://127.0.0.1:11434"):
+    def __init__(self, api_url: str = "http://127.0.0.1:11434", model: str = "llama3"):
         self.api_url = api_url
+        self.model = model
 
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None
@@ -124,7 +125,7 @@ class OllamaProvider(LLMProvider):
 
         data = {
             "prompt": prompt,
-            "model": "llama3",
+            "model": self.model,
             "format": "json",
             "stream": False,
             "options": {
@@ -181,7 +182,8 @@ def get_provider(config: Config) -> LLMProvider:
 
     if provider_name == "ollama":
         api_url = os.environ.get("OLLAMA_API_URL") or config.get("api_url", "http://127.0.0.1:11434")
-        return OllamaProvider(api_url)
+        model = os.environ.get("OLLAMA_MODEL") or config.get("ollama_model", "llama3")
+        return OllamaProvider(api_url, model)
     elif provider_name in ["openai", "claude"]:
         if not api_key:
             raise ValueError(
@@ -244,6 +246,11 @@ def setup_command():
             if not api_url:
                 api_url = "http://127.0.0.1:11434"
             config.set("api_url", api_url)
+
+            model = input("Enter Ollama model name (default: llama3): ")
+            if not model:
+                model = "llama3"
+            config.set("ollama_model", model)
         except KeyboardInterrupt:
             print("\nSetup aborted.")
             sys.exit(1)
