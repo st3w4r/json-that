@@ -7,6 +7,10 @@ patch:
 	poetry version patch
 	python bump_version.py
 
+minor:
+	poetry version minor
+	python bump_version.py
+
 build:
 	poetry build
 
