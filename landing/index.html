@@ -5,18 +5,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>json that</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+        id="light-theme">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css"
+        id="dark-theme">
     <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #222222;
+            --link-color: #0066cc;
+            --code-bg: #f5f5f5;
+            --code-border: #5a5a5a;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #2a2a2a;
+                --text-color: #e0e0e0;
+                --heading-color: #f0f0f0;
+                --link-color: #66d9ef;
+                --code-bg: #23241f;
+                --code-border: #f92672;
+            }
+        }
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #fff;
-            /* Set background to white */
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         header,
@@ -30,28 +55,36 @@
         }
 
         h1,
-        h2 {
-            color: #222;
+        h2,
+        h3 {
+            color: var(--heading-color);
         }
 
         p,
         li {
-            color: #555;
-            /* Lighten text color for better contrast */
+            color: var(--text-color);
             line-height: 1.5;
         }
 
-        code {
-            background-color: #f7f7f7;
-            display: block;
-            padding: 10px;
-            margin-top: 10px;
-            border-left: 5px solid #5a5a5a;
-            font-family: 'Courier New', Courier, monospace;
-            overflow-x: auto;
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
 
         pre {
+            background-color: var(--code-bg);
+            border-left: 5px solid var(--code-border);
+            margin: 10px 0;
+            padding: 10px;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+
+        code {
             font-family: 'Courier New', Courier, monospace;
         }
 
@@ -62,7 +95,8 @@
         footer {
             margin-top: auto;
             font-size: 0.9em;
-            color: #666;
+            color: var(--text-color);
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -83,11 +117,11 @@
     <main>
         <section>
             <h2>Installation</h2>
-            <code>pip install jsonthat</code>
+            <pre><code class="bash">pip install jsonthat</code></pre>
             <p>Start by setting up your LLM providers and enter your API keys when prompted:</p>
-            <code>jt --setup</code>
+            <pre><code class="bash">jt --setup</code></pre>
             <p>Display usage</p>
-            <code>jt -h</code>
+            <pre><code class="bash">jt -h</code></pre>
         </section>
         <section>
             <h2>Usage</h2>
@@ -95,16 +129,16 @@
 
             <h3>Basic Usage</h3>
             <p>Process text into JSON using the default provider:</p>
-            <pre><code>$ echo "My name is Jay and I'm 30 years old" | jt
-{
+            <pre><code class="bash">$ echo "My name is Jay and I'm 30 years old" | jt</code></pre>
+            <pre><code class="json">{
   "name": "Jay",
   "age": 30
 }</code></pre>
 
             <h3>Using a Specific Provider</h3>
             <p>Specify a provider for a single command:</p>
-            <pre><code>$ echo "Convert this sentence into JSON" | jt --provider openai
-{
+            <pre><code class="bash">$ echo "Convert this sentence into JSON" | jt --provider openai</code></pre>
+            <pre><code class="json">{
   "action": "Convert",
   "subject": "sentence",
   "target_format": "JSON"
@@ -112,8 +146,8 @@
 
             <h3>Using a JSON Schema</h3>
             <p>Guide the output using a JSON schema:</p>
-            <pre><code>$ echo "Alice is a software engineer with 5 years of experience" | jt --schema person_schema.json
-{
+            <pre><code class="bash">$ echo "Alice is a software engineer with 5 years of experience" | jt --schema person_schema.json</code></pre>
+            <pre><code class="json">{
   "name": "Alice",
   "occupation": "software engineer",
   "yearsOfExperience": 5
@@ -121,15 +155,15 @@
 
             <h3>Processing a File</h3>
             <p>Convert the contents of a file to JSON:</p>
-            <pre><code>$ cat input.txt | jt
-{
+            <pre><code class="bash">$ cat input.txt | jt</code></pre>
+            <pre><code class="json">{
   "content": "This is the content of input.txt converted to JSON format."
 }</code></pre>
 
             <h3>Combining Options</h3>
             <p>Use multiple options together:</p>
-            <pre><code>$ echo "Transform this using Ollama and a custom schema" | jt --provider ollama --schema custom_schema.json
-{
+            <pre><code class="bash">$ echo "Transform this using Ollama and a custom schema" | jt --provider ollama --schema custom_schema.json</code></pre>
+            <pre><code class="json">{
   "transformed_text": "This has been transformed using Ollama and a custom schema",
   "provider_used": "ollama",
   "schema_applied": true
@@ -151,29 +185,50 @@
             <h2>Configuration</h2>
             <h3>Config file</h3>
             <p>Configurations are managed through:</p>
-            <code>~/.config/jsonthat/config.yaml</code>
+            <pre><code class="bash">~/.config/jsonthat/config.yaml</code></pre>
             <p>The config file now stores multiple provider configurations and the default provider.</p>
         </section>
         <section>
             <h3>Environment Variables</h3>
             <p>To configure the CLI tool, you can set the following environment variables:</p>
-            <code>export LLM_PROVIDER='openai'<br>
-            export LLM_API_KEY='your_api_key_here'<br>
-            export OLLAMA_API_URL='http://127.0.0.1:11434'<br>
-            export OLLAMA_MODEL='llama3'
-            </code>
+            <pre><code class="bash">export LLM_PROVIDER='openai'
+export LLM_API_KEY='your_api_key_here'
+export OLLAMA_API_URL='http://127.0.0.1:11434'
+export OLLAMA_MODEL='llama3'
+</code></pre>
             <p>Specifies the large language model provider (e.g., 'openai', 'claude', or 'ollama'), API key for the
                 specified LLM provider, and Ollama-specific configurations.</p>
         </section>
         <section>
             <h3>Command-line Provider Selection</h3>
             <p>You can specify the provider to use for a single command:</p>
-            <code>echo "Your sample text" | jt --provider ollama</code>
+            <pre><code class="bash">echo "Your sample text" | jt --provider ollama</code></pre>
         </section>
     </main>
     <footer>
         <p></p>
     </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.highlightAll();
+
+        function setTheme(theme) {
+            document.getElementById('light-theme').disabled = (theme === 'dark');
+            document.getElementById('dark-theme').disabled = (theme === 'light');
+        }
+
+        function checkTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+        }
+
+        checkTheme();
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', checkTheme);
+    </script>
 </body>
 
 </html>
