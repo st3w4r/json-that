@@ -284,7 +284,7 @@ def example():
     print("examples:")
     print("  echo 'raw text' | jsonthat")
     print("  echo 'raw text' | jt")
-    print("  echo 'raw text' | jt -s schema.json")
+    print("  echo 'raw text' | jt --schema schema.json")
     print("  echo 'raw text' | jt --provider openai")
     print("""
   echo 'my name is jay' | jt
