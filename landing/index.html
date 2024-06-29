@@ -220,26 +220,27 @@ export OLLAMA_MODEL='llama3'
     <footer>
         <p></p>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
-        hljs.highlightAll();
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function () {
+            hljs.highlightAll();
 
-        function setTheme(theme) {
-            document.getElementById('light-theme').disabled = (theme === 'dark');
-            document.getElementById('dark-theme').disabled = (theme === 'light');
-        }
-
-        function checkTheme() {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                setTheme('dark');
-            } else {
-                setTheme('light');
+            function setTheme(theme) {
+                document.getElementById('light-theme').disabled = (theme === 'dark');
+                document.getElementById('dark-theme').disabled = (theme === 'light');
             }
-        }
 
-        checkTheme();
+            function checkTheme() {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    setTheme('dark');
+                } else {
+                    setTheme('light');
+                }
+            }
 
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', checkTheme);
+            checkTheme();
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', checkTheme);
+        });
     </script>
 </body>
 
