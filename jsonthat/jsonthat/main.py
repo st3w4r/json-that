@@ -183,6 +183,11 @@ class Config:
         self.config["default_provider"] = provider_name
         self.save_config()
 
+    def display_config(self):
+        print(f"Config file path: {self.config_file}")
+        print("\nCurrent configuration:")
+        print(yaml.dump(self.config, default_flow_style=False))
+
 
 def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProvider:
     if not provider_name:
@@ -315,6 +320,9 @@ def main():
     parser.add_argument(
         "--version", action="store_true", help="Show the version and exit"
     )
+    parser.add_argument(
+        "--config", action="store_true", help="Display current configuration"
+    )
     args = parser.parse_args()
 
     if args.version:
@@ -323,6 +331,10 @@ def main():
 
     if args.setup:
         setup_command(config)
+        return
+
+    if args.config:
+        config.display_config()
         return
 
     if sys.stdin.isatty():
