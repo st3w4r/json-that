@@ -1,4 +1,4 @@
-.PHONY: format patch build publish
+.PHONY: format patch minor build publish test
 
 format:
 	ruff format jsonthat/*.py tests/*.py bump_version.py
@@ -17,3 +17,5 @@ build:
 publish:
 	poetry publish
 
+test:
+	poetry run pytest
