@@ -198,7 +198,7 @@ def test_json_generation_with_schema():
         assert test_schema in called_args["messages"][0]["content"]
 
 
-def test_config_display(capsys, config):
+def test_config_display_file_exists(capsys, config):
     config.display_config()
     captured = capsys.readouterr()
 
@@ -206,3 +206,23 @@ def test_config_display(capsys, config):
     assert "Current configuration:" in captured.out
     assert "providers:" in captured.out
     assert "default_provider:" in captured.out
+
+
+def test_config_display_file_not_exists(capsys, config):
+    with patch("os.path.exists", return_value=False):
+        config.display_config()
+    captured = capsys.readouterr()
+
+    assert f"Config file path: {config.config_file}" in captured.out
+    assert "Config file does not exist" in captured.out
+    assert "Run 'jt --setup' to create a configuration" in captured.out
+
+
+def test_config_display_empty_config(capsys, config):
+    config.config = {}
+    config.display_config()
+    captured = capsys.readouterr()
+
+    assert f"Config file path: {config.config_file}" in captured.out
+    assert "Configuration is empty" in captured.out
+    assert "Run 'jt --setup' to configure the tool" in captured.out
