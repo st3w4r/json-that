@@ -185,8 +185,20 @@ class Config:
 
     def display_config(self):
         print(f"Config file path: {self.config_file}")
+
+        if not os.path.exists(self.config_file):
+            print(
+                "\nConfig file does not exist. Run 'jt --setup' to create a configuration."
+            )
+            return
+
         print("\nCurrent configuration:")
-        print(yaml.dump(self.config, default_flow_style=False))
+        if not self.config or (
+            not self.config.get("providers") and not self.config.get("default_provider")
+        ):
+            print("Configuration is empty. Run 'jt --setup' to configure the tool.")
+        else:
+            print(yaml.dump(self.config, default_flow_style=False))
 
 
 def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProvider:
