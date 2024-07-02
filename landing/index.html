@@ -170,7 +170,38 @@
 
             <h3>Using a JSON Schema</h3>
             <p>Guide the output using a JSON schema:</p>
+            <pre><code class="bash">$ cat person_schema.json</code></pre>
+            <pre><code class="json">{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "occupation": {
+      "type": "string"
+    },
+    "yearsOfExperience": {
+      "type": "number"
+    }
+  },
+  "required": ["name", "occupation", "yearsOfExperience"]
+}</code></pre>
             <pre><code class="bash">$ echo "Alice is a software engineer with 5 years of experience" | jt --schema person_schema.json</code></pre>
+            <pre><code class="json">{
+  "name": "Alice",
+  "occupation": "software engineer",
+  "yearsOfExperience": 5
+}</code></pre>
+            <h3>Using a plain TEXT Schema</h3>
+            <p>Guide the output using a JSON schema:</p>
+            <pre><code class="bash">$ cat person_schema.txt
+
+name: string
+occupation: string
+yearsOfExperience: number
+</code></pre>
+            <pre><code class="bash">$ echo "Alice is a software engineer with 5 years of experience" | jt --schema person_schema.txt</code></pre>
             <pre><code class="json">{
   "name": "Alice",
   "occupation": "software engineer",
