@@ -33,6 +33,7 @@ echo 'my name is jay' | jt
 - [ ] advance documentation
 - [ ] more providers
   - [ ] gemini
+- [ ] select different model name from api provider
 - [ ] flag `--line` to transform each line of the input
 - [ ] flag `--usage` to show usage with tokens count
 - [ ] library for python
