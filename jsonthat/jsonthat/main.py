@@ -62,6 +62,51 @@ class OpenAIProvider(LLMProvider):
         return json.loads(transformed_text)
 
 
+class MistralProvider(LLMProvider):
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+
+    def transform_text_to_json(
+        self, text: str, schema: Optional[str] = None
+    ) -> dict[str, any]:
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        system_message = "transform the raw text to json\n"
+        if schema:
+            system_message += (
+                f" Use the following JSON schema to structure the output: {schema}\n"
+            )
+            system_message += (
+                "Without including extra schema information back in the response."
+            )
+
+        data = {
+            "model": "mistral-large-latest",
+            "messages": [
+                {"role": "system", "content": system_message},
+                {
+                    "role": "user",
+                    "content": f"Transform the following text into a JSON format: {text}",
+                },
+            ],
+            "temperature": 0,  # Set temperature to 0 for deterministic output,
+            "response_format": {"type": "json_object"},
+        }
+
+        response = requests.post(
+            "https://api.mistral.ai/v1/chat/completions", headers=headers, json=data
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        transformed_text = result["choices"][0]["message"]["content"]
+
+        return json.loads(transformed_text)
+
+
 class ClaudeProvider(LLMProvider):
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -215,7 +260,7 @@ def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProv
         )
         model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
         return OllamaProvider(api_url, model)
-    elif provider_name in ["openai", "claude"]:
+    elif provider_name in ["openai", "claude", "mistral"]:
         api_key = os.environ.get("LLM_API_KEY") or provider_config.get("api_key")
         if not api_key:
             raise ValueError(
@@ -225,6 +270,8 @@ def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProv
             return OpenAIProvider(api_key)
         elif provider_name == "claude":
             return ClaudeProvider(api_key)
+        elif provider_name == "mistral":
+            return MistralProvider(api_key)
     else:
         raise ValueError(f"Unsupported LLM provider: {provider_name}")
 
@@ -248,11 +295,13 @@ def setup_command(config: Config):
     while True:
         try:
             provider = input(
-                "Choose your LLM provider (openai/claude/ollama): "
+                "Choose your LLM provider (openai/claude/mistral/ollama): "
             ).lower()
-            if provider in ["openai", "claude", "ollama"]:
+            if provider in ["openai", "claude", "mistral", "ollama"]:
                 break
-            print("Invalid choice. Please enter 'openai', 'claude', or 'ollama'.")
+            print(
+                "Invalid choice. Please enter 'openai', 'claude', 'mistral' or 'ollama'."
+            )
         except KeyboardInterrupt:
             print("\nSetup aborted.")
             sys.exit(1)
@@ -262,7 +311,7 @@ def setup_command(config: Config):
 
     provider_config = {}
 
-    if provider in ["openai", "claude"]:
+    if provider in ["openai", "claude", "mistral"]:
         try:
             api_key = input(f"Enter your {provider.capitalize()} API key: ")
             provider_config["api_key"] = api_key
