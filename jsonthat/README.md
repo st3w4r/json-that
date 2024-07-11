@@ -5,6 +5,7 @@ transform any raw text to json, using LLM.
 Provider:
 - OpenAI
 - Claude AI
+- Mistral AI
 - Ollama (local)
 
 ## installation
