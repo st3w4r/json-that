@@ -291,28 +291,24 @@ def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProv
             os.environ.get("LLM_PROVIDER") or config.get_default_provider() or "openai"
         )
 
+    provider_info = ProviderRegistry.get_provider_info(provider_name)
     provider_config = config.get_provider_config(provider_name)
 
-    if provider_name == "ollama":
-        api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get(
-            "api_url", "http://127.0.0.1:11434"
-        )
-        model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
-        return OllamaProvider(api_url, model)
-    elif provider_name in ["openai", "claude", "mistral"]:
+    if provider_info.provider_type == ProviderType.CLOUD:
         api_key = os.environ.get("LLM_API_KEY") or provider_config.get("api_key")
         if not api_key:
             raise ValueError(
                 f"API key not found for {provider_name}.\nPlease run the setup command:\njt --setup\n"
             )
-        if provider_name == "openai":
-            return OpenAIProvider(api_key)
-        elif provider_name == "claude":
-            return ClaudeProvider(api_key)
-        elif provider_name == "mistral":
-            return MistralProvider(api_key)
-    else:
-        raise ValueError(f"Unsupported LLM provider: {provider_name}")
+        provider_config = {"api_key": api_key}
+    elif provider_name == "ollama":
+        api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get(
+            "api_url", "http://127.0.0.1:11434"
+        )
+        model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
+        provider_config = {"api_url": api_url, "model": model}
+
+    return provider_info.provider_class(**provider_config)
 
 
 def read_stdin() -> str:
