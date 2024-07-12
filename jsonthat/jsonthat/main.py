@@ -515,7 +515,7 @@ def main():
     parser.add_argument(
         "--stream",
         action="store_true",
-        help="Use streaming output (only for OpenAI provider)",
+        help="Use streaming output",
     )
     args = parser.parse_args()
 
