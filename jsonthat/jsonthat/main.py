@@ -59,12 +59,10 @@ class ProviderRegistry:
 
 @ProviderRegistry.register("openai", ProviderType.CLOUD)
 class OpenAIProvider(LLMProvider):
+    supports_streaming = True
+
     def __init__(self, api_key: str):
         self.api_key = api_key
-
-    @property
-    def supports_streaming(self) -> bool:
-        return True
 
     def _prepare_request_data(self, text: str, schema: Optional[str] = None) -> Dict:
         system_message = "Transform the raw text to JSON\n"
@@ -140,12 +138,10 @@ class OpenAIProvider(LLMProvider):
 
 @ProviderRegistry.register("mistral", ProviderType.CLOUD)
 class MistralProvider(LLMProvider):
+    supports_streaming = True
+
     def __init__(self, api_key: str):
         self.api_key = api_key
-
-    @property
-    def supports_streaming(self) -> bool:
-        return True
 
     def _prepare_request_data(self, text: str, schema: Optional[str] = None) -> Dict:
         system_message = "Transform the raw text to JSON\n"
@@ -221,12 +217,10 @@ class MistralProvider(LLMProvider):
 
 @ProviderRegistry.register("claude", ProviderType.CLOUD)
 class ClaudeProvider(LLMProvider):
+    supports_streaming = False
+
     def __init__(self, api_key: str):
         self.api_key = api_key
-
-    @property
-    def supports_streaming(self) -> bool:
-        return False
 
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None, stream: bool = False
@@ -271,13 +265,11 @@ class ClaudeProvider(LLMProvider):
 
 @ProviderRegistry.register("ollama", ProviderType.LOCAL)
 class OllamaProvider(LLMProvider):
+    supports_streaming = False
+
     def __init__(self, api_url: str = "http://127.0.0.1:11434", model: str = "llama3"):
         self.api_url = api_url
         self.model = model
-
-    @property
-    def supports_streaming(self) -> bool:
-        return False
 
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None, stream: bool = False
@@ -485,6 +477,7 @@ def example():
     print("  echo 'raw text' | jt")
     print("  echo 'raw text' | jt --schema schema.json")
     print("  echo 'raw text' | jt --provider openai")
+    print("  echo 'raw text' | jt --stream")
     print("""
   echo 'my name is jay' | jt
   {
@@ -497,6 +490,14 @@ class CustomHelpParser(argparse.ArgumentParser):
     def print_help(self):
         super().print_help()
         example()
+
+
+def get_streaming_providers() -> List[str]:
+    return [
+        name
+        for name, info in ProviderRegistry._providers.items()
+        if info.provider_class.supports_streaming
+    ]
 
 
 def main():
@@ -515,7 +516,9 @@ def main():
     parser.add_argument(
         "--stream",
         action="store_true",
-        help="Use streaming output",
+        help="Use streaming output (supported for "
+        + ", ".join(get_streaming_providers())
+        + ")",
     )
     args = parser.parse_args()
 
