@@ -613,6 +613,9 @@ def main():
             display_streaming_response(result)
         else:
             print(json.dumps(result, indent=2))
+    except KeyboardInterrupt:
+        print("\nProcessing aborted.")
+        sys.exit(1)
     except requests.RequestException as e:
         print(f"Error: Failed to communicate with the API. {str(e)}", file=sys.stderr)
         sys.exit(1)
