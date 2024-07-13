@@ -301,7 +301,7 @@ class ClaudeProvider(LLMProvider):
 
 @ProviderRegistry.register("ollama", ProviderType.LOCAL)
 class OllamaProvider(LLMProvider):
-    supports_streaming = False
+    supports_streaming = True
 
     def __init__(self, api_url: str = "http://127.0.0.1:11434", model: str = "llama3"):
         self.api_url = api_url
@@ -325,21 +325,42 @@ class OllamaProvider(LLMProvider):
             "prompt": prompt,
             "model": self.model,
             "format": "json",
-            "stream": False,
+            "stream": stream,
             "options": {
                 "temperature": 0,  # Set temperature to 0 for deterministic output
             },
         }
 
         response = requests.post(
-            f"{self.api_url}/api/generate", headers=headers, json=data
+            f"{self.api_url}/api/generate",
+            headers=headers,
+            json=data,
+            stream=stream,
         )
         response.raise_for_status()
 
-        result = response.json()
-        transformed_text = result["response"]
+        if stream:
+            return self._stream_response(response)
+        else:
+            result = response.json()
+            transformed_text = result["response"]
+            return json.loads(transformed_text)
 
-        return json.loads(transformed_text)
+    def _stream_response(
+        self, response: requests.Response
+    ) -> Generator[str, None, None]:
+        for line in response.iter_lines():
+            if line:
+                line = line.decode("utf-8")
+                try:
+                    json_response = json.loads(line)
+                    if json_response.get("done", False):
+                        break
+                    response = json_response.get("response", None)
+                    if response:
+                        yield response
+                except json.JSONDecodeError:
+                    continue
 
 
 def display_streaming_response(generator: Generator[str, None, None]):
@@ -528,14 +549,6 @@ class CustomHelpParser(argparse.ArgumentParser):
         example()
 
 
-def get_streaming_providers() -> List[str]:
-    return [
-        name
-        for name, info in ProviderRegistry._providers.items()
-        if info.provider_class.supports_streaming
-    ]
-
-
 def main():
     config = Config()
 
@@ -552,9 +565,7 @@ def main():
     parser.add_argument(
         "--stream",
         action="store_true",
-        help="Use streaming output (supported for "
-        + ", ".join(get_streaming_providers())
-        + ")",
+        help="Stream the output",
     )
     args = parser.parse_args()
 
