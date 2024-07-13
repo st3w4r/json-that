@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from abc import ABC, abstractmethod
-from typing import Dict, Type, Optional, List
+from typing import Dict, Type, Optional, List, Generator, Union
 import yaml
 import argparse
 from enum import Enum
@@ -18,8 +18,13 @@ class ProviderType(Enum):
 class LLMProvider(ABC):
     @abstractmethod
     def transform_text_to_json(
-        self, text: str, schema: Optional[str] = None
-    ) -> dict[str, any]:
+        self, text: str, schema: Optional[str] = None, stream: bool = False
+    ) -> Union[dict[str, any], Generator[str, None, None]]:
+        pass
+
+    @property
+    @abstractmethod
+    def supports_streaming(self) -> bool:
         pass
 
 
@@ -54,27 +59,22 @@ class ProviderRegistry:
 
 @ProviderRegistry.register("openai", ProviderType.CLOUD)
 class OpenAIProvider(LLMProvider):
+    supports_streaming = True
+
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    def transform_text_to_json(
-        self, text: str, schema: Optional[str] = None
-    ) -> dict[str, any]:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
-        system_message = "transform the raw text to json\n"
+    def _prepare_request_data(self, text: str, schema: Optional[str] = None) -> Dict:
+        system_message = "Transform the raw text to JSON\n"
         if schema:
             system_message += (
-                f" Use the following JSON schema to structure the output: {schema}\n"
+                f"Use the following JSON schema to structure the output: {schema}\n"
             )
             system_message += (
                 "Without including extra schema information back in the response."
             )
 
-        data = {
+        return {
             "model": "gpt-4o",
             "messages": [
                 {"role": "system", "content": system_message},
@@ -83,44 +83,77 @@ class OpenAIProvider(LLMProvider):
                     "content": f"Transform the following text into a JSON format: {text}",
                 },
             ],
-            "temperature": 0,  # Set temperature to 0 for deterministic output,
+            "temperature": 0,
             "response_format": {"type": "json_object"},
         }
 
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions", headers=headers, json=data
-        )
-        response.raise_for_status()
-
-        result = response.json()
-        transformed_text = result["choices"][0]["message"]["content"]
-
-        return json.loads(transformed_text)
-
-
-@ProviderRegistry.register("mistral", ProviderType.CLOUD)
-class MistralProvider(LLMProvider):
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-
-    def transform_text_to_json(
-        self, text: str, schema: Optional[str] = None
-    ) -> dict[str, any]:
-        headers = {
+    def _get_headers(self) -> Dict[str, str]:
+        return {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
 
-        system_message = "transform the raw text to json\n"
+    def transform_text_to_json(
+        self, text: str, schema: Optional[str] = None, stream: bool = False
+    ) -> Union[dict[str, any], Generator[str, None, None]]:
+        headers = self._get_headers()
+        data = self._prepare_request_data(text, schema)
+        data["stream"] = stream
+
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=data,
+            stream=stream,
+        )
+        response.raise_for_status()
+
+        if stream:
+            return self._stream_response(response)
+        else:
+            result = response.json()
+            transformed_text = result["choices"][0]["message"]["content"]
+            return json.loads(transformed_text)
+
+    def _stream_response(
+        self, response: requests.Response
+    ) -> Generator[str, None, None]:
+        for line in response.iter_lines():
+            if line:
+                line = line.decode("utf-8")
+                if line.startswith("data: "):
+                    line = line[6:]  # Remove 'data: ' prefix
+                    if line.strip() == "[DONE]":
+                        break
+                    try:
+                        json_response = json.loads(line)
+                        content = json_response["choices"][0]["delta"].get(
+                            "content", ""
+                        )
+                        if content:
+                            yield content
+                    except json.JSONDecodeError:
+                        continue
+
+
+@ProviderRegistry.register("mistral", ProviderType.CLOUD)
+class MistralProvider(LLMProvider):
+    supports_streaming = True
+
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+
+    def _prepare_request_data(self, text: str, schema: Optional[str] = None) -> Dict:
+        system_message = "Transform the raw text to JSON\n"
         if schema:
             system_message += (
-                f" Use the following JSON schema to structure the output: {schema}\n"
+                f"Use the following JSON schema to structure the output: {schema}\n"
             )
             system_message += (
                 "Without including extra schema information back in the response."
             )
 
-        data = {
+        return {
             "model": "mistral-large-latest",
             "messages": [
                 {"role": "system", "content": system_message},
@@ -129,29 +162,69 @@ class MistralProvider(LLMProvider):
                     "content": f"Transform the following text into a JSON format: {text}",
                 },
             ],
-            "temperature": 0,  # Set temperature to 0 for deterministic output,
+            "temperature": 0,
             "response_format": {"type": "json_object"},
         }
 
+    def _get_headers(self) -> Dict[str, str]:
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+    def transform_text_to_json(
+        self, text: str, schema: Optional[str] = None, stream: bool = False
+    ) -> Union[dict[str, any], Generator[str, None, None]]:
+        headers = self._get_headers()
+        data = self._prepare_request_data(text, schema)
+        data["stream"] = stream
+
         response = requests.post(
-            "https://api.mistral.ai/v1/chat/completions", headers=headers, json=data
+            "https://api.mistral.ai/v1/chat/completions",
+            headers=headers,
+            json=data,
+            stream=stream,
         )
         response.raise_for_status()
 
-        result = response.json()
-        transformed_text = result["choices"][0]["message"]["content"]
+        if stream:
+            return self._stream_response(response)
+        else:
+            result = response.json()
+            transformed_text = result["choices"][0]["message"]["content"]
+            return json.loads(transformed_text)
 
-        return json.loads(transformed_text)
+    def _stream_response(
+        self, response: requests.Response
+    ) -> Generator[str, None, None]:
+        for line in response.iter_lines():
+            if line:
+                line = line.decode("utf-8")
+                if line.startswith("data: "):
+                    line = line[6:]  # Remove 'data: ' prefix
+                    if line.strip() == "[DONE]":
+                        break
+                    try:
+                        json_response = json.loads(line)
+                        content = json_response["choices"][0]["delta"].get(
+                            "content", ""
+                        )
+                        if content:
+                            yield content
+                    except json.JSONDecodeError:
+                        continue
 
 
 @ProviderRegistry.register("claude", ProviderType.CLOUD)
 class ClaudeProvider(LLMProvider):
+    supports_streaming = True
+
     def __init__(self, api_key: str):
         self.api_key = api_key
 
     def transform_text_to_json(
-        self, text: str, schema: Optional[str] = None
-    ) -> dict[str, any]:
+        self, text: str, schema: Optional[str] = None, stream: bool = False
+    ) -> Union[dict[str, any], Generator[str, None, None]]:
         headers = {
             "x-api-key": self.api_key,
             "Content-Type": "application/json",
@@ -176,29 +249,67 @@ class ClaudeProvider(LLMProvider):
             "model": "claude-3-5-sonnet-20240620",
             "max_tokens": 1024,
             "messages": [{"role": "user", "content": full_user_message}],
-            "temperature": 0,  # Set temperature to 0 for deterministic output
+            "temperature": 0,  # Set temperature to 0 for deterministic output,
+            "stream": stream,
         }
 
         response = requests.post(
-            "https://api.anthropic.com/v1/messages", headers=headers, json=data
+            "https://api.anthropic.com/v1/messages",
+            headers=headers,
+            json=data,
+            stream=stream,
         )
         response.raise_for_status()
 
-        result = response.json()
-        transformed_text = result["content"][0]["text"]
+        if stream:
+            return self._stream_response(response)
+        else:
+            result = response.json()
+            transformed_text = result["content"][0]["text"]
+            return json.loads(transformed_text)
 
-        return json.loads(transformed_text)
+    def _stream_response(
+        self, response: requests.Response
+    ) -> Generator[str, None, None]:
+        for line in response.iter_lines():
+            if line:
+                line = line.decode("utf-8")
+                if line.startswith("event: content_block_stop") or line.startswith(
+                    "event: message_stop"
+                ):
+                    break
+                if line.startswith("data: "):
+                    line = line[6:]  # Remove 'data: ' prefix
+                    try:
+                        json_response = json.loads(line)
+                        type_msg = json_response.get("type")
+                        if type_msg == "content_block_start":
+                            content = json_response.get("ccontent_block", None)
+                            if content:
+                                text = content.get("text", None)
+                                if text:
+                                    yield text
+                        elif type_msg == "content_block_delta":
+                            content = json_response.get("delta", None)
+                            if content:
+                                text = content.get("text", None)
+                                if text:
+                                    yield text
+                    except json.JSONDecodeError:
+                        continue
 
 
 @ProviderRegistry.register("ollama", ProviderType.LOCAL)
 class OllamaProvider(LLMProvider):
+    supports_streaming = True
+
     def __init__(self, api_url: str = "http://127.0.0.1:11434", model: str = "llama3"):
         self.api_url = api_url
         self.model = model
 
     def transform_text_to_json(
-        self, text: str, schema: Optional[str] = None
-    ) -> dict[str, any]:
+        self, text: str, schema: Optional[str] = None, stream: bool = False
+    ) -> Union[dict[str, any], Generator[str, None, None]]:
         headers = {
             "Content-Type": "application/json",
         }
@@ -214,21 +325,50 @@ class OllamaProvider(LLMProvider):
             "prompt": prompt,
             "model": self.model,
             "format": "json",
-            "stream": False,
+            "stream": stream,
             "options": {
                 "temperature": 0,  # Set temperature to 0 for deterministic output
             },
         }
 
         response = requests.post(
-            f"{self.api_url}/api/generate", headers=headers, json=data
+            f"{self.api_url}/api/generate",
+            headers=headers,
+            json=data,
+            stream=stream,
         )
         response.raise_for_status()
 
-        result = response.json()
-        transformed_text = result["response"]
+        if stream:
+            return self._stream_response(response)
+        else:
+            result = response.json()
+            transformed_text = result["response"]
+            return json.loads(transformed_text)
 
-        return json.loads(transformed_text)
+    def _stream_response(
+        self, response: requests.Response
+    ) -> Generator[str, None, None]:
+        for line in response.iter_lines():
+            if line:
+                line = line.decode("utf-8")
+                try:
+                    json_response = json.loads(line)
+                    if json_response.get("done", False):
+                        break
+                    response = json_response.get("response", None)
+                    if response:
+                        yield response
+                except json.JSONDecodeError:
+                    continue
+
+
+def display_streaming_response(generator: Generator[str, None, None]):
+    for chunk in generator:
+        sys.stdout.write(chunk)
+        sys.stdout.flush()
+    sys.stdout.write("\n")
+    sys.stdout.flush()
 
 
 class Config:
@@ -394,6 +534,7 @@ def example():
     print("  echo 'raw text' | jt")
     print("  echo 'raw text' | jt --schema schema.json")
     print("  echo 'raw text' | jt --provider openai")
+    print("  echo 'raw text' | jt --stream")
     print("""
   echo 'my name is jay' | jt
   {
@@ -420,6 +561,11 @@ def main():
     )
     parser.add_argument(
         "--config", action="store_true", help="Display current configuration"
+    )
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream the output",
     )
     args = parser.parse_args()
 
@@ -455,13 +601,29 @@ def main():
         schema = read_schema_file(args.schema)
 
     try:
-        result = provider.transform_text_to_json(input_text, schema)
-        print(json.dumps(result, indent=2))
+        if args.stream and not provider.supports_streaming:
+            print(
+                f"Warning: {args.provider} does not support streaming. Falling back to non-streaming mode.",
+                file=sys.stderr,
+            )
+            args.stream = False
+
+        result = provider.transform_text_to_json(input_text, schema, stream=args.stream)
+        if isinstance(result, Generator):
+            display_streaming_response(result)
+        else:
+            print(json.dumps(result, indent=2))
+    except KeyboardInterrupt:
+        print("\nProcessing aborted.")
+        sys.exit(1)
     except requests.RequestException as e:
         print(f"Error: Failed to communicate with the API. {str(e)}", file=sys.stderr)
         sys.exit(1)
     except json.JSONDecodeError as e:
         print(f"Error: Failed to parse API response as JSON. {str(e)}", file=sys.stderr)
+        sys.exit(1)
+    except ValueError as e:
+        print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(1)
 
 

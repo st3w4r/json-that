@@ -29,6 +29,7 @@ echo 'my name is jay' | jt
 
 ```bash
 options:
-    --schema <json_schema_file> pass a json schema to format the output
-    --provider <provider>  Specify the LLM provider to use
+    --schema   <json_schema_file> Pass a json schema to format the output
+    --provider <provider>         Specify the LLM provider to use
+    --stream                      Stream the output
 ```
