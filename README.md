@@ -19,15 +19,15 @@ echo 'my name is jay' | jt
 
 ## Features
 
-- [x] json schema output
+- [x] Schema to structure output
 - [x] Pipe content directly
 - [x] Multi-LLM provider support: OpenAI, Claude, Mistral, Ollama
 - [x] Local LLM with Ollama
 - [x] CLI released as pip package
+- [x] Stream the output
 
 ## Coming
 
-- [ ] stream the output
 - [ ] partial json output
 - [ ] handle long content
 - [ ] advance documentation
