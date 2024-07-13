@@ -3,10 +3,16 @@ import json
 import os
 import requests
 from abc import ABC, abstractmethod
-from typing import Optional, Dict
+from typing import Dict, Type, Optional, List
 import yaml
 import argparse
+from enum import Enum
 from .version import __version__
+
+
+class ProviderType(Enum):
+    CLOUD = "cloud"
+    LOCAL = "local"
 
 
 class LLMProvider(ABC):
@@ -17,6 +23,36 @@ class LLMProvider(ABC):
         pass
 
 
+class ProviderInfo:
+    def __init__(self, provider_class: Type[LLMProvider], provider_type: ProviderType):
+        self.provider_class = provider_class
+        self.provider_type = provider_type
+
+
+class ProviderRegistry:
+    _providers: Dict[str, ProviderInfo] = {}
+
+    @classmethod
+    def register(cls, name: str, provider_type: ProviderType):
+        def decorator(provider_class: Type[LLMProvider]):
+            cls._providers[name] = ProviderInfo(provider_class, provider_type)
+            return provider_class
+
+        return decorator
+
+    @classmethod
+    def get_provider_info(cls, name: str) -> ProviderInfo:
+        provider_info = cls._providers.get(name)
+        if not provider_info:
+            raise ValueError(f"Unsupported LLM provider: {name}")
+        return provider_info
+
+    @classmethod
+    def get_available_providers(cls) -> List[str]:
+        return list(cls._providers.keys())
+
+
+@ProviderRegistry.register("openai", ProviderType.CLOUD)
 class OpenAIProvider(LLMProvider):
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -62,6 +98,7 @@ class OpenAIProvider(LLMProvider):
         return json.loads(transformed_text)
 
 
+@ProviderRegistry.register("mistral", ProviderType.CLOUD)
 class MistralProvider(LLMProvider):
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -107,6 +144,7 @@ class MistralProvider(LLMProvider):
         return json.loads(transformed_text)
 
 
+@ProviderRegistry.register("claude", ProviderType.CLOUD)
 class ClaudeProvider(LLMProvider):
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -152,6 +190,7 @@ class ClaudeProvider(LLMProvider):
         return json.loads(transformed_text)
 
 
+@ProviderRegistry.register("ollama", ProviderType.LOCAL)
 class OllamaProvider(LLMProvider):
     def __init__(self, api_url: str = "http://127.0.0.1:11434", model: str = "llama3"):
         self.api_url = api_url
@@ -252,28 +291,24 @@ def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProv
             os.environ.get("LLM_PROVIDER") or config.get_default_provider() or "openai"
         )
 
+    provider_info = ProviderRegistry.get_provider_info(provider_name)
     provider_config = config.get_provider_config(provider_name)
 
-    if provider_name == "ollama":
-        api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get(
-            "api_url", "http://127.0.0.1:11434"
-        )
-        model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
-        return OllamaProvider(api_url, model)
-    elif provider_name in ["openai", "claude", "mistral"]:
+    if provider_info.provider_type == ProviderType.CLOUD:
         api_key = os.environ.get("LLM_API_KEY") or provider_config.get("api_key")
         if not api_key:
             raise ValueError(
                 f"API key not found for {provider_name}.\nPlease run the setup command:\njt --setup\n"
             )
-        if provider_name == "openai":
-            return OpenAIProvider(api_key)
-        elif provider_name == "claude":
-            return ClaudeProvider(api_key)
-        elif provider_name == "mistral":
-            return MistralProvider(api_key)
-    else:
-        raise ValueError(f"Unsupported LLM provider: {provider_name}")
+        provider_config = {"api_key": api_key}
+    elif provider_name == "ollama":
+        api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get(
+            "api_url", "http://127.0.0.1:11434"
+        )
+        model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
+        provider_config = {"api_url": api_url, "model": model}
+
+    return provider_info.provider_class(**provider_config)
 
 
 def read_stdin() -> str:
@@ -292,15 +327,16 @@ def read_schema_file(file_path: str) -> str:
 def setup_command(config: Config):
     print("Welcome to 'json that' CLI setup!")
 
+    available_providers = ProviderRegistry.get_available_providers()
+    provider_list = "/".join(available_providers)
+
     while True:
         try:
-            provider = input(
-                "Choose your LLM provider (openai/claude/mistral/ollama): "
-            ).lower()
-            if provider in ["openai", "claude", "mistral", "ollama"]:
+            provider = input(f"Choose your LLM provider ({provider_list}): ").lower()
+            if provider in available_providers:
                 break
             print(
-                "Invalid choice. Please enter 'openai', 'claude', 'mistral' or 'ollama'."
+                f"Invalid choice. Please enter one of: {', '.join(available_providers)}"
             )
         except KeyboardInterrupt:
             print("\nSetup aborted.")
@@ -309,9 +345,10 @@ def setup_command(config: Config):
             print("\nSetup aborted.")
             sys.exit(1)
 
+    provider_info = ProviderRegistry.get_provider_info(provider)
     provider_config = {}
 
-    if provider in ["openai", "claude", "mistral"]:
+    if provider_info.provider_type == ProviderType.CLOUD:
         try:
             api_key = input(f"Enter your {provider.capitalize()} API key: ")
             provider_config["api_key"] = api_key
