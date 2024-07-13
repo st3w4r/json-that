@@ -19,21 +19,20 @@ echo 'my name is jay' | jt
 
 ## Features
 
-- [x] Schema to structure output
+- [x] Structure output with a schema
 - [x] Pipe content directly
-- [x] Multi-LLM provider support: OpenAI, Claude, Mistral, Ollama
-- [x] Local LLM with Ollama
-- [x] CLI released as pip package
-- [x] Stream the output
+- [x] Support for multiple LLM providers: OpenAI, Claude, Mistral, Ollama
+- [x] Local LLM support with Ollama
+- [x] CLI available as a pip package
+- [x] Stream output
 
-## Coming
+## Coming Soon
 
-- [ ] partial json output
-- [ ] handle long content
-- [ ] advance documentation
-- [ ] more providers
-  - [ ] gemini
-- [ ] select different model name from api provider
-- [ ] flag `--line` to transform each line of the input
-- [ ] flag `--usage` to show usage with tokens count
-- [ ] library for python
+- [ ] Partial JSON output
+- [ ] Handling of long content
+- [ ] Advanced documentation
+- [ ] More providers (e.g., Gemini)
+- [ ] Select different model names from API providers
+- [ ] `--line` flag to transform each line of input
+- [ ] `--usage` flag to show usage with token count
+- [ ] Python library
