@@ -217,7 +217,7 @@ class MistralProvider(LLMProvider):
 
 @ProviderRegistry.register("claude", ProviderType.CLOUD)
 class ClaudeProvider(LLMProvider):
-    supports_streaming = False
+    supports_streaming = True
 
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -249,18 +249,54 @@ class ClaudeProvider(LLMProvider):
             "model": "claude-3-5-sonnet-20240620",
             "max_tokens": 1024,
             "messages": [{"role": "user", "content": full_user_message}],
-            "temperature": 0,  # Set temperature to 0 for deterministic output
+            "temperature": 0,  # Set temperature to 0 for deterministic output,
+            "stream": stream,
         }
 
         response = requests.post(
-            "https://api.anthropic.com/v1/messages", headers=headers, json=data
+            "https://api.anthropic.com/v1/messages",
+            headers=headers,
+            json=data,
+            stream=stream,
         )
         response.raise_for_status()
 
-        result = response.json()
-        transformed_text = result["content"][0]["text"]
+        if stream:
+            return self._stream_response(response)
+        else:
+            result = response.json()
+            transformed_text = result["content"][0]["text"]
+            return json.loads(transformed_text)
 
-        return json.loads(transformed_text)
+    def _stream_response(
+        self, response: requests.Response
+    ) -> Generator[str, None, None]:
+        for line in response.iter_lines():
+            if line:
+                line = line.decode("utf-8")
+                if line.startswith("event: content_block_stop") or line.startswith(
+                    "event: message_stop"
+                ):
+                    break
+                if line.startswith("data: "):
+                    line = line[6:]  # Remove 'data: ' prefix
+                    try:
+                        json_response = json.loads(line)
+                        type_msg = json_response.get("type")
+                        if type_msg == "content_block_start":
+                            content = json_response.get("ccontent_block", None)
+                            if content:
+                                text = content.get("text", None)
+                                if text:
+                                    yield text
+                        elif type_msg == "content_block_delta":
+                            content = json_response.get("delta", None)
+                            if content:
+                                text = content.get("text", None)
+                                if text:
+                                    yield text
+                    except json.JSONDecodeError:
+                        continue
 
 
 @ProviderRegistry.register("ollama", ProviderType.LOCAL)
