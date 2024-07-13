@@ -270,6 +270,13 @@ yearsOfExperience: number
   "provider_used": "ollama",
   "schema_applied": true
 }</code></pre>
+
+            <h3>Stream output</h3>
+            <p>Stream the output of the LLM in real-time:</p>
+            <pre><code class="bash">$ echo "Explain the process of photosynthesis" | jt --stream</code></pre>
+            <p>This will display the JSON output as it's being generated, allowing you to see the
+                results in real-time.</p>
+
         </section>
         <section>
             <h2>Features</h2>
@@ -281,6 +288,7 @@ yearsOfExperience: number
                 <li>Store <b>multiple provider configurations</b></li>
                 <li>Set a <b>default provider</b></li>
                 <li>Choose provider via <b>command-line flag</b></li>
+                <li>Stream output in <b>real-time</b></li>
             </ul>
         </section>
         <section>
