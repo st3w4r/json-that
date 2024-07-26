@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "jsonthat"
-version = "0.3.0"
+version = "0.3.1"
 description = "Transform plain text to JSON"
 authors = ["Yanael Barbier <st3w4r@gmail.com>"]
 readme = "README.md"
