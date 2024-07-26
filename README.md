@@ -25,6 +25,7 @@ echo 'my name is jay' | jt
 - [x] Local LLM support with Ollama
 - [x] CLI available as a pip package
 - [x] Stream output
+- [x] Select different model names from API providers
 
 ## Coming Soon
 
@@ -32,7 +33,6 @@ echo 'my name is jay' | jt
 - [ ] Handling of long content
 - [ ] Advanced documentation
 - [ ] More providers (e.g., Gemini)
-- [ ] Select different model names from API providers
 - [ ] `--line` flag to transform each line of input
 - [ ] `--usage` flag to show usage with token count
 - [ ] Python library
