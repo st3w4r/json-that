@@ -4,6 +4,7 @@ from jsonthat.main import (
     OpenAIProvider,
     ClaudeProvider,
     OllamaProvider,
+    MistralProvider,
     Config,
     get_provider,
     read_schema_file,
@@ -19,6 +20,7 @@ def mock_config():
         "providers": {
             "openai": {"api_key": "test_openai_key"},
             "claude": {"api_key": "test_claude_key"},
+            "mistral": {"api_key": "test_mistral_key"},
             "ollama": {"api_url": "http://test.ollama.api", "model": "test_model"},
         },
         "default_provider": "openai",
@@ -39,6 +41,16 @@ def config(mock_config, tmp_path):
 
 def test_openai_provider():
     provider = OpenAIProvider("test_key")
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {
+            "choices": [{"message": {"content": '{"key": "value"}'}}]
+        }
+        result = provider.transform_text_to_json("test text")
+        assert result == {"key": "value"}
+
+
+def test_mistral_provider():
+    provider = MistralProvider("test_key")
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "choices": [{"message": {"content": '{"key": "value"}'}}]
@@ -115,6 +127,24 @@ def test_read_schema_file_error():
 
 def test_openai_provider_json_generation():
     provider = OpenAIProvider("test_key")
+    test_input = "My name is Alice and I'm 30 years old"
+    expected_output = {"name": "Alice", "age": 30}
+
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {
+            "choices": [{"message": {"content": json.dumps(expected_output)}}]
+        }
+        result = provider.transform_text_to_json(test_input)
+        assert result == expected_output
+
+        # Verify JSON is mentioned in the prompt
+        called_args = mock_post.call_args[1]["json"]
+        assert "json" in called_args["messages"][1]["content"].lower()
+        assert test_input in called_args["messages"][1]["content"]
+
+
+def test_mistral_provider_json_generation():
+    provider = MistralProvider("test_key")
     test_input = "My name is Alice and I'm 30 years old"
     expected_output = {"name": "Alice", "age": 30}
 
