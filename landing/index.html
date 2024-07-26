@@ -305,6 +305,7 @@
                 <li>Store <b>multiple provider configurations</b></li>
                 <li>Set a <b>default provider</b></li>
                 <li>Choose provider via <b>command-line flag</b></li>
+                <li>Set <b>model name</b> per provider</li>
                 <li>Stream output in <b>real-time</b></li>
             </ul>
         </section>
@@ -313,13 +314,30 @@
             <h3>Config file</h3>
             <p>Configurations are managed through:</p>
             <pre><code class="bash">~/.config/jsonthat/config.yaml</code></pre>
-            <p>The config file now stores multiple provider configurations and the default provider.</p>
+            <p>Command to display configuration:</p>
+            <pre><code class="bash">$ jt --config</code></pre>
+            <p>The config file stores multiple provider configurations and the default provider.</p>
+            <pre><code class="bash">default_provider: openai
+providers:
+  claude:
+    api_key: *****
+  mistral:
+    api_key: *****
+    model: open-mistral-nemo
+  ollama:
+    api_url: http://localhost:11434
+    model: llama3.1
+  openai:
+    api_key: *****
+    model: gpt-4o-mini
+</code></pre>
         </section>
         <section>
             <h3>Environment Variables</h3>
             <p>To configure the CLI tool, you can set the following environment variables:</p>
             <pre><code class="bash">export LLM_PROVIDER='openai'
 export LLM_API_KEY='your_api_key_here'
+export LLM_MODEL='gpt-4o-mini'
 export OLLAMA_API_URL='http://127.0.0.1:11434'
 export OLLAMA_MODEL='llama3'
 </code></pre>
