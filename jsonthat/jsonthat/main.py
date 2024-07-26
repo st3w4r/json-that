@@ -62,7 +62,7 @@ class OpenAIProvider(LLMProvider):
     supports_streaming = True
     default_model = "gpt-4o"
 
-    def __init__(self, api_key: str, model: str | None):
+    def __init__(self, api_key: str, model: str | None = None):
         self.api_key = api_key
         self.model = model or self.default_model
 
@@ -143,7 +143,7 @@ class MistralProvider(LLMProvider):
     supports_streaming = True
     default_model = "mistral-large-latest"
 
-    def __init__(self, api_key: str, model: str | None):
+    def __init__(self, api_key: str, model: str | None = None):
         self.api_key = api_key
         self.model = model or self.default_model
 
@@ -224,7 +224,7 @@ class ClaudeProvider(LLMProvider):
     supports_streaming = True
     default_model = "claude-3-5-sonnet-20240620"
 
-    def __init__(self, api_key: str, model: str | None):
+    def __init__(self, api_key: str, model: str | None = None):
         self.api_key = api_key
         self.model = model or self.default_model
 
