@@ -308,7 +308,7 @@ class ClaudeProvider(LLMProvider):
 @ProviderRegistry.register("ollama", ProviderType.LOCAL)
 class OllamaProvider(LLMProvider):
     supports_streaming = True
-    default_model = "llama3"
+    default_model = "llama3.1"
 
     def __init__(
         self, api_url: str = "http://127.0.0.1:11434", model: str | None = None
@@ -538,7 +538,7 @@ def setup_command(config: Config):
     config.set_provider_config(provider, provider_config)
 
     set_default = input(
-        "Do you want to set this as the default provider? (y/n): "
+        "Do you want to set this as the default provider? (y/[n]): "
     ).lower()
     if set_default == "y":
         config.set_default_provider(provider)
