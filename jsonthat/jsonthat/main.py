@@ -60,9 +60,11 @@ class ProviderRegistry:
 @ProviderRegistry.register("openai", ProviderType.CLOUD)
 class OpenAIProvider(LLMProvider):
     supports_streaming = True
+    default_model = "gpt-4o"
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model: str | None):
         self.api_key = api_key
+        self.model = model or self.default_model
 
     def _prepare_request_data(self, text: str, schema: Optional[str] = None) -> Dict:
         system_message = "Transform the raw text to JSON\n"
@@ -75,7 +77,7 @@ class OpenAIProvider(LLMProvider):
             )
 
         return {
-            "model": "gpt-4o",
+            "model": self.model,
             "messages": [
                 {"role": "system", "content": system_message},
                 {
@@ -139,9 +141,11 @@ class OpenAIProvider(LLMProvider):
 @ProviderRegistry.register("mistral", ProviderType.CLOUD)
 class MistralProvider(LLMProvider):
     supports_streaming = True
+    default_model = "mistral-large-latest"
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model: str | None):
         self.api_key = api_key
+        self.model = model or self.default_model
 
     def _prepare_request_data(self, text: str, schema: Optional[str] = None) -> Dict:
         system_message = "Transform the raw text to JSON\n"
@@ -154,7 +158,7 @@ class MistralProvider(LLMProvider):
             )
 
         return {
-            "model": "mistral-large-latest",
+            "model": self.model,
             "messages": [
                 {"role": "system", "content": system_message},
                 {
@@ -218,9 +222,11 @@ class MistralProvider(LLMProvider):
 @ProviderRegistry.register("claude", ProviderType.CLOUD)
 class ClaudeProvider(LLMProvider):
     supports_streaming = True
+    default_model = "claude-3-5-sonnet-20240620"
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model: str | None):
         self.api_key = api_key
+        self.model = model or self.default_model
 
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None, stream: bool = False
@@ -246,7 +252,7 @@ class ClaudeProvider(LLMProvider):
         )
 
         data = {
-            "model": "claude-3-5-sonnet-20240620",
+            "model": self.model,
             "max_tokens": 1024,
             "messages": [{"role": "user", "content": full_user_message}],
             "temperature": 0,  # Set temperature to 0 for deterministic output,
@@ -302,10 +308,13 @@ class ClaudeProvider(LLMProvider):
 @ProviderRegistry.register("ollama", ProviderType.LOCAL)
 class OllamaProvider(LLMProvider):
     supports_streaming = True
+    default_model = "llama3"
 
-    def __init__(self, api_url: str = "http://127.0.0.1:11434", model: str = "llama3"):
+    def __init__(
+        self, api_url: str = "http://127.0.0.1:11434", model: str | None = None
+    ):
         self.api_url = api_url
-        self.model = model
+        self.model = model or self.default_model
 
     def transform_text_to_json(
         self, text: str, schema: Optional[str] = None, stream: bool = False
@@ -440,12 +449,13 @@ def get_provider(config: Config, provider_name: Optional[str] = None) -> LLMProv
             raise ValueError(
                 f"API key not found for {provider_name}.\nPlease run the setup command:\njt --setup\n"
             )
-        provider_config = {"api_key": api_key}
+        model = os.environ.get("LLM_MODEL") or provider_config.get("model")
+        provider_config = {"api_key": api_key, "model": model}
     elif provider_name == "ollama":
         api_url = os.environ.get("OLLAMA_API_URL") or provider_config.get(
             "api_url", "http://127.0.0.1:11434"
         )
-        model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model", "llama3")
+        model = os.environ.get("OLLAMA_MODEL") or provider_config.get("model")
         provider_config = {"api_url": api_url, "model": model}
 
     return provider_info.provider_class(**provider_config)
@@ -504,17 +514,26 @@ def setup_command(config: Config):
             if not api_url:
                 api_url = "http://127.0.0.1:11434"
             provider_config["api_url"] = api_url
-
-            model = input("Enter Ollama model name (default: llama3): ")
-            if not model:
-                model = "llama3"
-            provider_config["model"] = model
         except KeyboardInterrupt:
             print("\nSetup aborted.")
             sys.exit(1)
         except EOFError:
             print("\nSetup aborted.")
             sys.exit(1)
+
+    try:
+        default_model = provider_info.provider_class.default_model or ""
+        model = input(
+            f"Enter {provider.capitalize()} model name (default: {default_model}): "
+        )
+        if model:
+            provider_config["model"] = model
+    except KeyboardInterrupt:
+        print("\nSetup aborted.")
+        sys.exit(1)
+    except EOFError:
+        print("\nSetup aborted.")
+        sys.exit(1)
 
     config.set_provider_config(provider, provider_config)
 
@@ -617,7 +636,15 @@ def main():
         print("\nProcessing aborted.")
         sys.exit(1)
     except requests.RequestException as e:
-        print(f"Error: Failed to communicate with the API. {str(e)}", file=sys.stderr)
+        print(f"Error: Failed to communicate with the API.\n{str(e)}", file=sys.stderr)
+        if e.response is not None:
+            try:
+                err = e.response.json()
+                err_yaml = yaml.dump(err)
+                print(err_yaml, file=sys.stderr)
+            except json.JSONDecodeError:
+                err = e.response.text
+                print(err, file=sys.stderr)
         sys.exit(1)
     except json.JSONDecodeError as e:
         print(f"Error: Failed to parse API response as JSON. {str(e)}", file=sys.stderr)
