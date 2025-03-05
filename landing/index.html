@@ -294,6 +294,16 @@
             <p>This will display the JSON output as it's being generated, allowing you to see the
                 results in real-time.</p>
 
+            <h3>Line-by-line Processing</h3>
+            <p>Process each line of input separately into individual JSON objects using <code>--line</code>
+                flag:</p>
+            <pre><code class="bash">$ echo -e "line1\nline2" | jt --line</code></pre>
+            <pre><code class="json">{"text": "line1"}
+{"text": "line2"}</code></pre>
+            <p>Designed for multi-line formats (CSV/JSON Lines), it splits each line into a distinct record.</p>
+            <pre><code class="bash">$ cat lines.csv | jt --line</code></pre>
+            <pre><code class="json">{"text": "line1"}
+{"text": "line2"}</code></pre>
         </section>
         <section>
             <h2>Features</h2>
