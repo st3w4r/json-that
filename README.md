@@ -26,6 +26,7 @@ echo 'my name is jay' | jt
 - [x] CLI available as a pip package
 - [x] Stream output
 - [x] Select different model names from API providers
+- [x] `--line` flag to transform each line of input
 
 ## Coming Soon
 
@@ -33,6 +34,6 @@ echo 'my name is jay' | jt
 - [ ] Handling of long content
 - [ ] Advanced documentation
 - [ ] More providers (e.g., Gemini)
-- [ ] `--line` flag to transform each line of input
 - [ ] `--usage` flag to show usage with token count
 - [ ] Python library
+- [ ] batch line processing to speed up the process

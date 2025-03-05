@@ -567,7 +567,6 @@ class CustomHelpParser(argparse.ArgumentParser):
         super().print_help()
         example()
 
-
 def main():
     config = Config()
 
@@ -581,62 +580,63 @@ def main():
     parser.add_argument(
         "--config", action="store_true", help="Display current configuration"
     )
-    parser.add_argument(
-        "--stream",
-        action="store_true",
-        help="Stream the output",
-    )
+    parser.add_argument("--stream", action="store_true", help="Stream the output")
+    parser.add_argument("--line", action="store_true", help="Process input line by line")
     args = parser.parse_args()
 
     if args.version:
         print(f"jsonthat CLI version {__version__}")
         return
-
     if args.setup:
         setup_command(config)
         return
-
     if args.config:
         config.display_config()
         return
 
-    if sys.stdin.isatty():
+    if sys.stdin.isatty() and not args.line:
         parser.print_help()
         return
 
     try:
         provider = get_provider(config, args.provider)
     except ValueError as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    input_text = read_stdin()
-    if not input_text:
-        print("Error: No input provided.", file=sys.stderr)
-        sys.exit(1)
+    schema = read_schema_file(args.schema) if args.schema else None
 
-    schema = None
-    if args.schema:
-        schema = read_schema_file(args.schema)
+    stream = args.stream
+    if stream and not provider.supports_streaming:
+        print(
+            f"Warning: {args.provider or 'Provider'} does not support streaming. "
+            "Falling back to non-streaming mode.",
+            file=sys.stderr
+        )
+        stream = False
+
+    if args.line:
+        lines = (line.strip() for line in sys.stdin if line.strip())
+    else:
+        input_text = read_stdin().strip()
+        if not input_text:
+            print("Error: No input provided.", file=sys.stderr)
+            sys.exit(1)
+        lines = [input_text]
 
     try:
-        if args.stream and not provider.supports_streaming:
-            print(
-                f"Warning: {args.provider} does not support streaming. Falling back to non-streaming mode.",
-                file=sys.stderr,
-            )
-            args.stream = False
+        for text_chunk in lines:
+            result = provider.transform_text_to_json(text_chunk, schema, stream=stream)
+            if isinstance(result, Generator):
+                display_streaming_response(result)
+            else:
+                print(json.dumps(result, indent=2))
 
-        result = provider.transform_text_to_json(input_text, schema, stream=args.stream)
-        if isinstance(result, Generator):
-            display_streaming_response(result)
-        else:
-            print(json.dumps(result, indent=2))
     except KeyboardInterrupt:
         print("\nProcessing aborted.")
         sys.exit(1)
     except requests.RequestException as e:
-        print(f"Error: Failed to communicate with the API.\n{str(e)}", file=sys.stderr)
+        print(f"Error: Failed to communicate with the API.\n{e}", file=sys.stderr)
         if e.response is not None:
             try:
                 err = e.response.json()
@@ -647,10 +647,10 @@ def main():
                 print(err, file=sys.stderr)
         sys.exit(1)
     except json.JSONDecodeError as e:
-        print(f"Error: Failed to parse API response as JSON. {str(e)}", file=sys.stderr)
+        print(f"Error: Failed to parse API response as JSON. {e}", file=sys.stderr)
         sys.exit(1)
     except ValueError as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 
