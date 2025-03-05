@@ -585,6 +585,13 @@ def main():
     parser.add_argument(
         "--line", action="store_true", help="Process input line by line"
     )
+    parser.add_argument(
+        "-c",
+        "--compact",
+        action="store_true",
+        help="Output in compact JSON (single line) format.",
+    )
+
     args = parser.parse_args()
 
     if args.version:
@@ -633,7 +640,10 @@ def main():
             if isinstance(result, Generator):
                 display_streaming_response(result)
             else:
-                print(json.dumps(result, indent=2))
+                if args.compact:
+                    print(json.dumps(result, separators=(",", ":")))
+                else:
+                    print(json.dumps(result, indent=2))
 
     except KeyboardInterrupt:
         print("\nProcessing aborted.")
