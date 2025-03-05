@@ -567,6 +567,7 @@ class CustomHelpParser(argparse.ArgumentParser):
         super().print_help()
         example()
 
+
 def main():
     config = Config()
 
@@ -581,7 +582,9 @@ def main():
         "--config", action="store_true", help="Display current configuration"
     )
     parser.add_argument("--stream", action="store_true", help="Stream the output")
-    parser.add_argument("--line", action="store_true", help="Process input line by line")
+    parser.add_argument(
+        "--line", action="store_true", help="Process input line by line"
+    )
     args = parser.parse_args()
 
     if args.version:
@@ -611,7 +614,7 @@ def main():
         print(
             f"Warning: {args.provider or 'Provider'} does not support streaming. "
             "Falling back to non-streaming mode.",
-            file=sys.stderr
+            file=sys.stderr,
         )
         stream = False
 
