@@ -1,25 +1,34 @@
 import toml
 
 
-def read_version_from_pyproject():
+def read_pyproject_data():
     with open("pyproject.toml", "r") as f:
         pyproject_data = toml.load(f)
-    version = pyproject_data.get("tool", {}).get("poetry", {}).get("version", None)
-    if version is None:
-        raise ValueError("Version not found in pyproject.toml")
-    return version
+    return pyproject_data
 
 
-def write_version_to_file(version):
+def get_field(pyproject_data, field_path):
+    fields = field_path.split(".")
+    value = pyproject_data
+    for field in fields:
+        value = value.get(field, None)
+        if value is None:
+            raise ValueError(f"{field_path} not found in pyproject.toml")
+    return value
+
+
+def write_version_to_file(name, version):
     version_file_content = f'__version__ = "{version}"\n'
-    with open("jsonthat/version.py", "w") as f:
+    with open(f"{name}/version.py", "w") as f:
         f.write(version_file_content)
 
 
 def main():
-    version = read_version_from_pyproject()
-    write_version_to_file(version)
-    print(f"Version {version} written to version.py")
+    pyproject_data = read_pyproject_data()
+    name = get_field(pyproject_data, "tool.poetry.name")
+    version = get_field(pyproject_data, "tool.poetry.version")
+    write_version_to_file(name, version)
+    print(f"Version {version} written to {name}/version.py")
 
 
 if __name__ == "__main__":
